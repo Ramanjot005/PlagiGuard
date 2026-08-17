@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - PlagiGuard</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body style="background:var(--background); display:flex; align-items:center; justify-content:center; min-height:100vh;">
+    
+    <div class="card" style="width:100%; max-width:420px; padding:3rem 2.5rem;">
+        <h2 style="text-align:center; margin-bottom:2rem;">Welcome Back</h2>
+        
+        <form>
+            <label>Email</label>
+            <input type="email" required style="width:100%; padding:12px; margin:8px 0 20px; border:1px solid var(--border); border-radius:var(--radius-sm);">
+            
+            <label>Password</label>
+            <div style="position:relative;">
+                <input type="password" required style="width:100%; padding:12px; margin:8px 0 8px; border:1px solid var(--border); border-radius:var(--radius-sm);">
+                <button type="button" class="toggle-password" style="position:absolute; right:12px; top:18px; background:none; border:none; color:var(--primary); cursor:pointer;">Show</button>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin:1rem 0;">
+                <label><input type="checkbox"> Remember me</label>
+                <a href="#" style="color:var(--primary);">Forgot password?</a>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:14px;">Sign In</button>
+        </form>
+        
+        <p style="text-align:center; margin-top:2rem;">
+            Don't have an account? <a href="signup.html" style="color:var(--primary); font-weight:500;">Create one</a>
+        </p>
+    </div>
+
+    <script src="js/ui/auth-ui.js"></script>
+</body>
+</html>

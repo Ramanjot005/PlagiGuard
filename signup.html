@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - PlagiGuard</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body style="background:var(--background); display:flex; align-items:center; justify-content:center; min-height:100vh;">
+    
+    <div class="card" style="width:100%; max-width:460px; padding:3rem 2.5rem;">
+        <h2 style="text-align:center; margin-bottom:2rem;">Create Account</h2>
+        
+        <form>
+            <label>Full Name</label>
+            <input type="text" required style="width:100%; padding:12px; margin:8px 0 16px; border:1px solid var(--border); border-radius:var(--radius-sm);">
+            
+            <label>Email</label>
+            <input type="email" required style="width:100%; padding:12px; margin:8px 0 16px; border:1px solid var(--border); border-radius:var(--radius-sm);">
+            
+            <label>Password</label>
+            <div style="position:relative;">
+                <input type="password" id="password" required style="width:100%; padding:12px; margin:8px 0 16px; border:1px solid var(--border); border-radius:var(--radius-sm);">
+                <button type="button" class="toggle-password" style="position:absolute; right:12px; top:18px; background:none; border:none; color:var(--primary);">Show</button>
+            </div>
+            
+            <label>Confirm Password</label>
+            <input type="password" required style="width:100%; padding:12px; margin:8px 0 16px; border:1px solid var(--border); border-radius:var(--radius-sm);">
+            
+            <label>Role</label>
+            <select style="width:100%; padding:12px; margin:8px 0 24px; border:1px solid var(--border); border-radius:var(--radius-sm);">
+                <option>Instructor</option>
+                <option>Teaching Assistant</option>
+            </select>
+            
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:14px;">Create Account</button>
+        </form>
+        
+        <p style="text-align:center; margin-top:2rem;">
+            Already have an account? <a href="login.html" style="color:var(--primary); font-weight:500;">Sign In</a>
+        </p>
+    </div>
+
+    <script src="js/ui/auth-ui.js"></script>
+</body>
+</html>

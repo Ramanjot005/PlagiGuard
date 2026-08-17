@@ -1,0 +1,40 @@
+@media (max-width: 1024px) {
+    .hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+    
+    .pipeline {
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .pipeline::before {
+        display: none;
+    }
+    
+    h1 { font-size: 2.25rem; }
+}
+
+@media (max-width: 480px) {
+    .container { padding: 0 1rem; }
+    .dashboard-header { flex-direction: column; align-items: flex-start; }
+}

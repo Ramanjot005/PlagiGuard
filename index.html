@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlagiGuard - Detect Similarity. Protect Academic Integrity.</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .hero-preview {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+        }
+    </style>
+</head>
+<body>
+    <script src="js/ui/navbar.js"></script>
+
+    <header class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Detect Similarity.<br>Protect Academic Integrity.</h1>
+                <p>PlagiGuard helps instructors quickly review student submissions and identify potentially similar assignments through a clear and transparent comparison workflow.</p>
+                <div style="margin-top: 2rem;">
+                    <a href="dashboard.html" class="btn btn-primary" style="font-size:1.1rem; padding:1rem 2rem;">Open Dashboard</a>
+                    <a href="how-it-works.html" class="btn btn-secondary" style="font-size:1.1rem; padding:1rem 2rem; margin-left:1rem;">How It Works</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="hero-preview">
+                <h4 style="margin-bottom:1rem; color:var(--text-muted);">Live Preview</h4>
+                <div class="card" style="margin-bottom:1rem;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <div>
+                            <strong>Aarav Sharma ↔ Riya Kapoor</strong><br>
+                            <span class="text-muted">Data Structures Assignment</span>
+                        </div>
+                        <div>
+                            <span class="badge badge-danger">87% Similarity</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="background:#f1f5f9; padding:1rem; border-radius:8px; font-size:0.9rem;">
+                    Status: <span class="badge badge-review">Needs Review</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="container" style="padding:5rem 0;">
+        <h2 style="text-align:center; margin-bottom:3rem;">Academic Review Shouldn't Be a Manual Hunt</h2>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:2rem;">
+            <div class="card">
+                <h3>Too Many Submissions</h3>
+                <p class="text-muted">Large classes can generate hundreds of assignments every semester.</p>
+            </div>
+            <div class="card">
+                <h3>Manual Comparison</h3>
+                <p class="text-muted">Comparing documents one-by-one is extremely time-consuming.</p>
+            </div>
+            <div class="card">
+                <h3>Difficult Patterns</h3>
+                <p class="text-muted">Similar ideas and structure are hard to spot manually.</p>
+            </div>
+            <div class="card">
+                <h3>Slow Review Cycle</h3>
+                <p class="text-muted">Instructors need a faster way to identify what truly needs attention.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="container" style="background:white; padding:5rem 0; border-radius:var(--radius);">
+        <h2 style="text-align:center; margin-bottom:3rem;">A Clearer Way to Review Similarity</h2>
+        <div class="pipeline">
+            <div class="pipeline-step"><div class="step-number">01</div><strong>Submission</strong><p class="text-muted">Assignments are collected</p></div>
+            <div class="pipeline-step"><div class="step-number">02</div><strong>Validation</strong><p class="text-muted">Data is cleaned and validated</p></div>
+            <div class="pipeline-step"><div class="step-number">03</div><strong>Text Processing</strong><p class="text-muted">Content is prepared for analysis</p></div>
+            <div class="pipeline-step"><div class="step-number">04</div><strong>Similarity Analysis</strong><p class="text-muted">Pairs are evaluated</p></div>
+            <div class="pipeline-step"><div class="step-number">05</div><strong>Results</strong><p class="text-muted">Flagged pairs are ranked</p></div>
+            <div class="pipeline-step"><div class="step-number">06</div><strong>Instructor Review</strong><p class="text-muted">Final academic decision</p></div>
+        </div>
+    </section>
+
+    <section class="container" style="padding:5rem 0;">
+        <h2 style="text-align:center; margin-bottom:3rem;">Features</h2>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:2rem;">
+            <div class="card"><h3>Similarity Overview</h3><p class="text-muted">Instant understanding of which submissions need attention.</p></div>
+            <div class="card"><h3>Submission Review</h3><p class="text-muted">All student and assignment context in one clean view.</p></div>
+            <div class="card"><h3>Suspicious Pair Ranking</h3><p class="text-muted">High-similarity pairs clearly ranked and highlighted.</p></div>
+            <div class="card"><h3>Visual Analysis</h3><p class="text-muted">Clean tables, badges, and percentage indicators.</p></div>
+            <div class="card"><h3>Instructor Dashboard</h3><p class="text-muted">Everything important in one professional workspace.</p></div>
+            <div class="card"><h3>Fully Responsive</h3><p class="text-muted">Works perfectly on desktop, tablet, and mobile.</p></div>
+        </div>
+    </section>
+
+    <section class="container" style="background:var(--primary); color:white; padding:4rem; border-radius:var(--radius); text-align:center; margin-bottom:4rem;">
+        <h2 style="color:white;">Make assignment review simpler.</h2>
+        <p style="font-size:1.2rem; max-width:700px; margin:1.5rem auto;">PlagiGuard gives instructors a clearer starting point for reviewing potentially similar submissions.</p>
+        <a href="dashboard.html" class="btn" style="background:white; color:var(--primary); font-size:1.1rem; padding:1rem 2.5rem;">Open Dashboard →</a>
+    </section>
+
+    <script src="js/ui/navbar.js"></script>
+</body>
+</html>
