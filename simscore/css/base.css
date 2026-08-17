@@ -1,0 +1,187 @@
+/* =========================================================
+   base.css
+   Reset, colours, fonts, headings and tiny helper classes.
+   Everything here is "global" - it is used by every page.
+   ========================================================= */
+
+/* ---------- 1. Small reset ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+
+/* ---------- 2. Design tokens (colours, spacing, sizes) ----------
+   These variables are the "design system".
+   If we change a value here, the whole site changes.        */
+:root {
+  /* brand colours */
+  --brand: #3b5bdb;
+  --brand-dark: #2f49b0;
+  --brand-light: #eaeeff;
+
+  /* text colours */
+  --text: #1c2434;
+  --text-soft: #5a6478;
+  --text-mute: #8892a4;
+
+  /* surfaces */
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --line: #e3e7ef;
+
+  /* status colours */
+  --ok: #1a7f4b;
+  --ok-bg: #e7f6ee;
+  --warn: #a96208;
+  --warn-bg: #fdf1de;
+  --danger: #c0392b;
+  --danger-bg: #fdeceb;
+  --info: #1d6fa5;
+  --info-bg: #e6f2fa;
+
+  /* spacing scale (4px steps) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+
+  /* font sizes */
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 16px;
+  --fs-lg: 20px;
+  --fs-xl: 26px;
+  --fs-2xl: 34px;
+  --fs-3xl: 44px;
+
+  /* corners + shadows */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(20, 28, 50, 0.06);
+  --shadow: 0 6px 18px rgba(20, 28, 50, 0.08);
+  --shadow-lg: 0 18px 40px rgba(20, 28, 50, 0.16);
+
+  /* fixed sizes used by the layout */
+  --navbar-h: 64px;
+  --sidebar-w: 240px;
+}
+
+
+/* ---------- 3. Typography ---------- */
+body {
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  color: var(--text);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--text);
+}
+
+h1 { font-size: var(--fs-3xl); }
+h2 { font-size: var(--fs-2xl); }
+h3 { font-size: var(--fs-lg); }
+h4 { font-size: var(--fs-md); }
+
+p {
+  color: var(--text-soft);
+}
+
+small {
+  font-size: var(--fs-sm);
+}
+
+code,
+.mono {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: var(--fs-sm);
+}
+
+
+/* ---------- 4. Helper classes ---------- */
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+
+.text-soft { color: var(--text-soft); }
+.text-mute { color: var(--text-mute); }
+.text-sm   { font-size: var(--fs-sm); }
+.text-xs   { font-size: var(--fs-xs); }
+
+.bold { font-weight: 600; }
+
+.mt-1 { margin-top: var(--sp-1); }
+.mt-2 { margin-top: var(--sp-2); }
+.mt-3 { margin-top: var(--sp-3); }
+.mt-4 { margin-top: var(--sp-4); }
+.mt-5 { margin-top: var(--sp-5); }
+.mt-6 { margin-top: var(--sp-6); }
+
+.mb-2 { margin-bottom: var(--sp-2); }
+.mb-3 { margin-bottom: var(--sp-3); }
+.mb-4 { margin-bottom: var(--sp-4); }
+.mb-5 { margin-bottom: var(--sp-5); }
+
+.hidden { display: none !important; }
+
+/* long student names / long assignment titles must never break the layout */
+.wrap-text {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* one line only, extra text becomes "..." */
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* keyboard users must always see where they are */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(59, 91, 219, 0.35);
+  outline-offset: 2px;
+}

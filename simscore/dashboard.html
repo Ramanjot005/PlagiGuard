@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - SimScore</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <div class="row">
+        <!-- this button opens the sidebar on tablet / mobile -->
+        <button class="nav-toggle" id="sidebarToggle" aria-label="Open sidebar">
+          <span></span><span></span><span></span>
+        </button>
+
+        <a href="index.html" class="brand">
+          <span class="brand-mark">SS</span>
+          <span>SimScore</span>
+        </a>
+      </div>
+
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="how-it-works.html">How it works</a>
+        <a href="login.html" class="btn btn-outline btn-sm">Sign out</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- dark layer behind the sidebar on small screens -->
+  <div class="overlay" id="sidebarOverlay"></div>
+
+  <!-- ================= APP SHELL ================= -->
+  <div class="app">
+
+    <!-- ---------- SIDEBAR ---------- -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-title">Workspace</div>
+      <a href="dashboard.html" class="side-link active"><span class="dot"></span>Overview</a>
+      <a href="#submissions" class="side-link"><span class="dot"></span>Submissions</a>
+      <a href="#pairs" class="side-link"><span class="dot"></span>Suspicious pairs</a>
+      <a href="#matrix" class="side-link"><span class="dot"></span>Similarity matrix</a>
+
+      <div class="sidebar-title">Project</div>
+      <a href="how-it-works.html" class="side-link"><span class="dot"></span>How it works</a>
+      <a href="about.html" class="side-link"><span class="dot"></span>About</a>
+
+      <div class="card mt-5" style="background:var(--brand-light);border-color:#d6def9">
+        <div class="card-body" style="padding:var(--sp-4)">
+          <p class="text-xs bold" style="color:var(--brand-dark)">Phase 1</p>
+          <p class="text-xs mt-2">
+            All scores are computed in your browser with hand-written
+            n-gram and Jaccard code.
+          </p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ---------- MAIN CONTENT ---------- -->
+    <main class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>Overview</h1>
+          <p class="text-sm">Similarity results for the current assignment batch.</p>
+        </div>
+
+        <div class="row">
+          <input
+            type="search"
+            id="searchInput"
+            class="input search-input"
+            placeholder="Search student or title..." />
+          <button class="btn btn-primary" data-modal-open="submitModal">
+            + Add submission
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== SUMMARY CARDS - rendered by dashboard.js ===== -->
+      <div class="grid grid-4" id="statsRow">
+        <!-- placeholder skeletons shown before the data arrives -->
+        <div class="stat-card"><div class="skeleton" style="width:60%"></div><div class="skeleton mt-3" style="height:28px;width:40%"></div></div>
+        <div class="stat-card"><div class="skeleton" style="width:60%"></div><div class="skeleton mt-3" style="height:28px;width:40%"></div></div>
+        <div class="stat-card"><div class="skeleton" style="width:60%"></div><div class="skeleton mt-3" style="height:28px;width:40%"></div></div>
+        <div class="stat-card"><div class="skeleton" style="width:60%"></div><div class="skeleton mt-3" style="height:28px;width:40%"></div></div>
+      </div>
+
+      <!-- ===== SUBMISSIONS TABLE ===== -->
+      <div class="card mt-6" id="submissions">
+        <div class="card-head">
+          <div>
+            <h4>Submissions</h4>
+            <small class="text-mute">Each row shows the highest match found for that student.</small>
+          </div>
+          <span class="badge badge-mute">auto-updated</span>
+        </div>
+
+        <!-- dashboard.js fills this box: table, empty state or loader -->
+        <div class="card-body" id="submissionsBox"></div>
+      </div>
+
+      <!-- ===== PAIRS + ACTIVITY ===== -->
+      <div class="grid grid-2 mt-6" style="align-items:start">
+
+        <div class="card" id="pairs">
+          <div class="card-head">
+            <div>
+              <h4>Most suspicious pairs</h4>
+              <small class="text-mute">Sorted from the highest similarity down.</small>
+            </div>
+          </div>
+          <div class="card-body" id="pairsBox"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h4>Recent activity</h4>
+          </div>
+          <div class="card-body" id="activityBox"></div>
+        </div>
+
+      </div>
+
+      <!-- ===== HEATMAP ===== -->
+      <div class="card mt-6" id="matrix">
+        <div class="card-head">
+          <div>
+            <h4>Similarity matrix</h4>
+            <small class="text-mute">First four submissions, compared with each other.</small>
+          </div>
+          <div class="legend">
+            <span><i style="background:#9fd7b4"></i>Safe</span>
+            <span><i style="background:#f0c26b"></i>Low</span>
+            <span><i style="background:#e58d70"></i>Review</span>
+            <span><i style="background:#cf4b34"></i>High</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <div class="heatmap" id="heatmapBox"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ================= MODAL: ADD SUBMISSION ================= -->
+  <div class="modal" id="submitModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h4>Add a submission</h4>
+        <button class="modal-close" data-modal-close="submitModal" aria-label="Close">&times;</button>
+      </div>
+
+      <form id="submitForm">
+        <div class="modal-body">
+
+          <div class="field">
+            <label class="label" for="studentName">Student name</label>
+            <input type="text" id="studentName" class="input" placeholder="e.g. Aarav Sharma" maxlength="80" />
+            <span class="error-msg">Student name is required.</span>
+          </div>
+
+          <div class="field">
+            <label class="label" for="assignTitle">Assignment title</label>
+            <input type="text" id="assignTitle" class="input" placeholder="e.g. Essay on renewable energy" maxlength="140" />
+            <span class="error-msg">Assignment title is required.</span>
+          </div>
+
+          <div class="field">
+            <label class="label" for="assignText">Assignment text</label>
+            <textarea
+              id="assignText"
+              class="textarea"
+              placeholder="Paste the full assignment text here..."></textarea>
+            <span class="help" id="wordCount">0 / 50 words minimum</span>
+            <span class="error-msg">Text must be between 50 and 2000 words.</span>
+          </div>
+
+          <div class="alert alert-info text-sm">
+            The text is tokenised and compared by the logic layer &mdash;
+            this form only validates and hands over the data.
+          </div>
+
+        </div>
+
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" data-modal-close="submitModal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save &amp; compare</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= SCRIPTS ================= -->
+  <script src="js/ui/ui-kit.js"></script>
+  <script src="js/ui/navbar.js"></script>
+  <!-- logic team files go here, BEFORE dashboard.js:
+       <script src="js/core/tokenizer.js"></script>
+       <script src="js/core/similarity.js"></script>
+       <script src="js/services/storage.js"></script>
+       <script src="js/services/simscore-api.js"></script> -->
+  <script src="js/ui/dashboard.js"></script>
+</body>
+</html>

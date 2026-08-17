@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimScore - Assignment Plagiarism Similarity Scorer</title>
+
+  <!-- our own stylesheets, loaded in order -->
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-mark">SS</span>
+        <span>SimScore</span>
+      </a>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="how-it-works.html">How it works</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="login.html">Login</a>
+        <a href="signup.html" class="btn btn-primary btn-sm">Get started</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="badge badge-info mb-3">Phase 1 &middot; Vanilla JavaScript</span>
+        <h1>Find copied assignments before you grade them.</h1>
+        <p class="lead">
+          SimScore compares every pair of text submissions with a hand-written
+          n-gram and Jaccard similarity algorithm, then shows the suspicious
+          pairs in a clear matrix so the instructor can review them in seconds.
+        </p>
+
+        <div class="hero-actions">
+          <a href="dashboard.html" class="btn btn-primary btn-lg">Open dashboard</a>
+          <a href="how-it-works.html" class="btn btn-outline btn-lg">See how it works</a>
+        </div>
+
+        <div class="hero-points">
+          <div>
+            <strong>0</strong>
+            <small class="text-mute">external APIs used</small>
+          </div>
+          <div>
+            <strong>n&times;(n-1)/2</strong>
+            <small class="text-mute">pairs compared</small>
+          </div>
+          <div>
+            <strong>100%</strong>
+            <small class="text-mute">runs in the browser</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- static preview of the similarity matrix -->
+      <div class="card">
+        <div class="card-head">
+          <h4>Similarity matrix</h4>
+          <span class="badge badge-mute">preview</span>
+        </div>
+        <div class="card-body">
+          <div class="heatmap">
+            <div class="heat-head"></div>
+            <div class="heat-head">AS</div>
+            <div class="heat-head">HK</div>
+            <div class="heat-head">RV</div>
+            <div class="heat-head">SK</div>
+
+            <div class="heat-head text-right">Aarav</div>
+            <div class="heat-cell heat-0">--</div>
+            <div class="heat-cell heat-1">12%</div>
+            <div class="heat-cell heat-1">18%</div>
+            <div class="heat-cell heat-2">34%</div>
+
+            <div class="heat-head text-right">Harman</div>
+            <div class="heat-cell heat-1">12%</div>
+            <div class="heat-cell heat-0">--</div>
+            <div class="heat-cell heat-4">81%</div>
+            <div class="heat-cell heat-2">29%</div>
+
+            <div class="heat-head text-right">Rohit</div>
+            <div class="heat-cell heat-1">18%</div>
+            <div class="heat-cell heat-4">81%</div>
+            <div class="heat-cell heat-0">--</div>
+            <div class="heat-cell heat-2">27%</div>
+
+            <div class="heat-head text-right">Simran</div>
+            <div class="heat-cell heat-2">34%</div>
+            <div class="heat-cell heat-2">29%</div>
+            <div class="heat-cell heat-2">27%</div>
+            <div class="heat-cell heat-0">--</div>
+          </div>
+
+          <div class="legend mt-4">
+            <span><i style="background:#9fd7b4"></i>Safe</span>
+            <span><i style="background:#f0c26b"></i>Low</span>
+            <span><i style="background:#e58d70"></i>Review</span>
+            <span><i style="background:#cf4b34"></i>High risk</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROBLEM ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>The problem</h2>
+        <p>
+          A single class can submit 60 assignments. Reading all of them and
+          remembering who wrote what is impossible, so copied work slips through.
+        </p>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="feature-card">
+          <div class="icon-box">1</div>
+          <h3>Manual checking does not scale</h3>
+          <p>
+            60 submissions means 1,770 possible pairs. No teacher can compare
+            that many documents by hand before the deadline.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon-box">2</div>
+          <h3>Online tools are paid and private</h3>
+          <p>
+            Most plagiarism services need a subscription and require uploading
+            student work to a third-party server.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon-box">3</div>
+          <h3>Small edits defeat exact search</h3>
+          <p>
+            Changing a few words breaks a simple "find this sentence" search,
+            but the overall structure still stays almost identical.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SOLUTION ================= -->
+  <section class="section" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="container">
+      <div class="grid grid-2" style="align-items:center">
+        <div>
+          <span class="badge badge-info mb-3">Our solution</span>
+          <h2>A scorer we wrote ourselves, running fully offline.</h2>
+          <p class="mt-3">
+            Every submission is cut into overlapping word groups called
+            n-grams (shingles). Two assignments are then compared by asking a
+            simple question: how many n-grams do they share out of all the
+            n-grams they have together? That ratio is the Jaccard similarity.
+          </p>
+          <p class="mt-3">
+            The whole calculation is plain JavaScript. No library, no API,
+            no upload &mdash; the data never leaves the browser.
+          </p>
+          <a href="how-it-works.html" class="btn btn-primary mt-4">View the Phase 1 pipeline</a>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h4>Jaccard similarity in one line</h4></div>
+          <div class="card-body">
+            <p class="mono" style="background:var(--bg);padding:14px;border-radius:8px;color:var(--text)">
+              J(A, B) = |A &cap; B| / |A &cup; B|
+            </p>
+            <ul class="mt-4">
+              <li class="mb-3 text-sm text-soft">
+                <b>A, B</b> &mdash; the set of n-grams of each submission
+              </li>
+              <li class="mb-3 text-sm text-soft">
+                <b>&cap;</b> &mdash; n-grams that appear in both
+              </li>
+              <li class="text-sm text-soft">
+                <b>&cup;</b> &mdash; all unique n-grams from both
+              </li>
+            </ul>
+            <div class="alert alert-info mt-4 text-sm">
+              Result is always between 0 (nothing common) and 1 (identical).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>What Phase 1 includes</h2>
+        <p>Everything below is built with HTML, CSS and vanilla JavaScript only.</p>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="feature-card">
+          <div class="icon-box">&#9998;</div>
+          <h3>Submission form</h3>
+          <p>Textarea with a live word counter and minimum / maximum word validation.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon-box">&#9636;</div>
+          <h3>N-gram tokenizer</h3>
+          <p>Text is cleaned, lower-cased and split into overlapping word shingles.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon-box">&#8721;</div>
+          <h3>Pairwise scoring</h3>
+          <p>Every submission is compared with every other one and given a score.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon-box">&#9638;</div>
+          <h3>Heatmap matrix</h3>
+          <p>Colour coded grid rendered with the DOM, from safe green to high-risk red.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon-box">&#9776;</div>
+          <h3>Ranked suspicious list</h3>
+          <p>Pairs sorted highest first so the instructor reviews the worst cases first.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon-box">&#8635;</div>
+          <h3>Browser storage</h3>
+          <p>Submissions stay in LocalStorage, so the data survives a page refresh.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CTA ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="cta">
+        <h2>Ready to check your class?</h2>
+        <p>Create an instructor account and paste your first batch of assignments.</p>
+        <div class="btn-group">
+          <a href="signup.html" class="btn btn-white btn-lg">Create free account</a>
+          <a href="dashboard.html" class="btn btn-lg" style="border:1px solid rgba(255,255,255,.5);color:#fff">
+            Try the demo dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand mb-3">
+            <span class="brand-mark">SS</span>
+            <span>SimScore</span>
+          </div>
+          <p class="text-sm">
+            A student project: assignment plagiarism similarity scorer built
+            with hand-coded n-gram shingling and Jaccard similarity.
+          </p>
+        </div>
+
+        <div>
+          <h4>Pages</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="how-it-works.html">How it works</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Account</h4>
+          <ul>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="signup.html">Sign up</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom row-between">
+        <span>&copy; 2026 SimScore. Academic project.</span>
+        <span>Built with HTML, CSS and Vanilla JS</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/ui/ui-kit.js"></script>
+  <script src="js/ui/navbar.js"></script>
+</body>
+</html>

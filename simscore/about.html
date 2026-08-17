@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About - SimScore</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-mark">SS</span>
+        <span>SimScore</span>
+      </a>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="how-it-works.html">How it works</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="login.html">Login</a>
+        <a href="signup.html" class="btn btn-primary btn-sm">Get started</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ================= PAGE HEADER ================= -->
+  <section class="section" style="padding-bottom:var(--sp-5)">
+    <div class="container">
+      <div class="section-head">
+        <span class="badge badge-info mb-3">About the project</span>
+        <h2>Why we built SimScore</h2>
+        <p>
+          SimScore is a semester project that turns a classic computer science
+          idea &mdash; set similarity &mdash; into a tool a real instructor can use.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PURPOSE ================= -->
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-head"><h4>The purpose</h4></div>
+          <div class="card-body">
+            <p>
+              Instructors collect dozens of written assignments every term.
+              Copying between classmates is common, but catching it means
+              reading every submission and remembering the wording of all
+              the others at the same time.
+            </p>
+            <p class="mt-3">
+              SimScore removes that memory problem. It scores every possible
+              pair of submissions and shows only the ones that deserve a
+              human look. The tool never accuses anybody &mdash; it only
+              points at pairs that are unusually similar, and the instructor
+              makes the final decision.
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h4>Design rules we set for ourselves</h4></div>
+          <div class="card-body">
+            <ul>
+              <li class="mb-3 text-sm text-soft">
+                <b class="text-soft">No external plagiarism API.</b>
+                The similarity algorithm is written by hand so we actually
+                understand every step.
+              </li>
+              <li class="mb-3 text-sm text-soft">
+                <b class="text-soft">No frameworks.</b>
+                Plain HTML, CSS and vanilla JavaScript only.
+              </li>
+              <li class="mb-3 text-sm text-soft">
+                <b class="text-soft">Privacy first.</b>
+                Assignment text stays in the browser's own storage and is
+                never uploaded anywhere.
+              </li>
+              <li class="text-sm text-soft">
+                <b class="text-soft">Separated code.</b>
+                UI files draw the screen, logic files do the maths. Neither
+                one is allowed inside the other.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= USERS ================= -->
+  <section class="section" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="container">
+      <div class="section-head">
+        <h2>Who uses it</h2>
+        <p>Two roles, two very different needs.</p>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="feature-card">
+          <div class="icon-box">&#128100;</div>
+          <h3>The instructor</h3>
+          <p class="mb-3">
+            Adds the class submissions, runs the comparison and reviews the
+            ranked list of suspicious pairs.
+          </p>
+          <ul>
+            <li class="text-sm text-soft mb-2">&bull; Sees the full similarity matrix</li>
+            <li class="text-sm text-soft mb-2">&bull; Sorts pairs from highest score down</li>
+            <li class="text-sm text-soft mb-2">&bull; Opens any pair to compare the text</li>
+            <li class="text-sm text-soft">&bull; Decides what counts as plagiarism</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="icon-box">&#127891;</div>
+          <h3>The student</h3>
+          <p class="mb-3">
+            Pastes an assignment into the submission form and gets an instant
+            word-count check before the work is stored.
+          </p>
+          <ul>
+            <li class="text-sm text-soft mb-2">&bull; Simple textarea, no file upload needed</li>
+            <li class="text-sm text-soft mb-2">&bull; Live word counter with a minimum limit</li>
+            <li class="text-sm text-soft mb-2">&bull; Clear confirmation after submitting</li>
+            <li class="text-sm text-soft">&bull; Cannot see other students' scores</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= VALUE ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>The value it delivers</h2>
+      </div>
+
+      <div class="grid grid-4">
+        <div class="stat-card">
+          <div class="stat-label">Time saved</div>
+          <div class="stat-value">Hours</div>
+          <div class="stat-note">Manual pair reading is replaced by one ranked list.</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Cost</div>
+          <div class="stat-value">Zero</div>
+          <div class="stat-note">No subscription, no server, no paid API key.</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Privacy</div>
+          <div class="stat-value">Local</div>
+          <div class="stat-note">Student text never leaves the machine.</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Transparency</div>
+          <div class="stat-value">Open</div>
+          <div class="stat-note">Every score can be explained by the formula.</div>
+        </div>
+      </div>
+
+      <!-- honest limits section -->
+      <div class="card mt-6">
+        <div class="card-head"><h4>What SimScore is not</h4></div>
+        <div class="card-body">
+          <div class="alert alert-warn mb-4">
+            A high score is a signal for review, never a proof of cheating.
+          </div>
+          <div class="grid grid-3">
+            <p class="text-sm">
+              <b class="text-soft">It does not search the internet.</b><br />
+              Only the submissions you add are compared with each other.
+            </p>
+            <p class="text-sm">
+              <b class="text-soft">It does not understand meaning.</b><br />
+              Fully reworded work with the same idea will score low.
+            </p>
+            <p class="text-sm">
+              <b class="text-soft">It does not judge.</b><br />
+              Shared quotations or a common template can raise the score honestly.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand mb-3">
+            <span class="brand-mark">SS</span>
+            <span>SimScore</span>
+          </div>
+          <p class="text-sm">
+            A student project: assignment plagiarism similarity scorer built
+            with hand-coded n-gram shingling and Jaccard similarity.
+          </p>
+        </div>
+
+        <div>
+          <h4>Pages</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="how-it-works.html">How it works</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Account</h4>
+          <ul>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="signup.html">Sign up</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom row-between">
+        <span>&copy; 2026 SimScore. Academic project.</span>
+        <span>Built with HTML, CSS and Vanilla JS</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/ui/ui-kit.js"></script>
+  <script src="js/ui/navbar.js"></script>
+</body>
+</html>
