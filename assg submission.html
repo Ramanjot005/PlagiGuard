@@ -1,0 +1,1408 @@
+
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlagiaCheck - Assignment Similarity Scorer</title>
+
+    <style>
+        /* ==============================
+           BASIC CSS
+           ============================== */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            color: #243b53;
+            background: linear-gradient(135deg, #dff6ff, #f5eaff);
+            padding-bottom: 40px;
+        }
+
+        header {
+            text-align: center;
+            padding: 35px 15px 25px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin: auto;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: linear-gradient(135deg, #6c63ff, #4facfe);
+        }
+
+        h1 {
+            margin-top: 15px;
+            color: #253b80;
+            font-size: 30px;
+        }
+
+        .subtitle {
+            margin-top: 8px;
+            color: #64748b;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 28px;
+            border: 1px solid #dbe5f0;
+            box-shadow: 0 10px 30px rgba(50, 70, 100, 0.12);
+        }
+
+        .section-title {
+            font-size: 19px;
+            font-weight: bold;
+            color: #263d80;
+            margin-bottom: 22px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+            color: #334e68;
+        }
+
+        .required {
+            color: red;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            outline: none;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            background: #fbfdff;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: #6c63ff;
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.10);
+        }
+
+        textarea {
+            min-height: 190px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .upload-box {
+            border: 2px dashed #aab8d4;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            background: #f8f9ff;
+            cursor: pointer;
+        }
+
+        .upload-box:hover,
+        .upload-box.dragover {
+            border-color: #6c63ff;
+            background: #f1f0ff;
+        }
+
+        .upload-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .browse {
+            color: #5b50d6;
+            font-weight: bold;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-preview {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            background: #eef6ff;
+            border: 1px solid #cfe3f8;
+            border-radius: 9px;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-preview.show {
+            display: flex;
+        }
+
+        .file-name {
+            font-weight: bold;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 3px;
+        }
+
+        .remove-file {
+            border: none;
+            background: #ffe5e5;
+            color: #c53030;
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            color: #8a9aab;
+            font-size: 12px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            height: 1px;
+            background: #dbe3ec;
+            flex: 1;
+        }
+
+        .settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .word-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 12px;
+        }
+
+        #wordCount.good {
+            color: green;
+            font-weight: bold;
+        }
+
+        #wordCount.warning {
+            color: #d97706;
+            font-weight: bold;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            border: none;
+            padding: 12px 20px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .clear-btn {
+            background: #e8edf3;
+            color: #334e68;
+        }
+
+        .submit-btn {
+            color: white;
+            background: linear-gradient(135deg, #5b50d6, #4facfe);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            display: none;
+            margin-top: 18px;
+            padding: 13px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.error {
+            color: #991b1b;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+        }
+
+        .message.success {
+            color: #166534;
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+        }
+
+        .result {
+            display: none;
+            margin-top: 22px;
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8fbff, #eef2ff);
+            border: 1px solid #dbe4f2;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #293b7a;
+        }
+
+        .score {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e7f8ed;
+            border: 7px solid #45b36b;
+            font-weight: bold;
+            color: #218a48;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .result-item {
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .result-item span {
+            display: block;
+            font-size: 11px;
+            color: #718096;
+        }
+
+        .result-item strong {
+            display: block;
+            margin-top: 4px;
+        }
+
+        .info-box {
+            margin-top: 20px;
+            padding: 14px;
+            border-left: 4px solid #6c63ff;
+            background: #f5f3ff;
+            color: #4a5568;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 650px) {
+            .settings,
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">📝</div>
+        <h1>PlagiaCheck - Assignment Similarity Scorer</h1>
+        <p class="subtitle">
+            Submit your assignment and check its similarity.
+        </p>
+    </header>
+
+    <main class="container">
+
+        <div class="card">
+
+            <div class="section-title">
+                Assignment Details
+            </div>
+
+            <!-- Student Name -->
+            <div class="form-group">
+                <label>
+                    Student Name <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="studentName"
+                    placeholder="Enter your full name"
+                >
+            </div>
+
+            <!-- Assignment Title -->
+            <div class="form-group">
+                <label>
+                    Assignment Title <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="assignmentTitle"
+                    placeholder="Enter assignment title"
+                >
+            </div>
+
+            <!-- File Upload -->
+            <div class="form-group">
+                <label>
+                    Upload Assignment
+                </label>
+
+                <div class="upload-box" id="uploadBox">
+                    <div class="upload-icon">📤</div>
+
+                    <p>
+                        Drag and drop your file here
+                    </p>
+
+                    <p style="margin-top: 6px;">
+                        or <span class="browse">click to browse</span>
+                    </p>
+
+                    <p style="margin-top: 7px; font-size: 12px; color: #718096;">
+                        PDF, DOC, DOCX or TXT
+                    </p>
+
+                    <input
+                        type="file"
+                        id="fileInput"
+                        accept=".pdf,.doc,.docx,.txt"
+                    >
+                </div>
+
+                <div class="file-preview" id="filePreview">
+                    <div>
+                        <div class="file-name" id="fileName"></div>
+                        <div class="file-size" id="fileSize"></div>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="remove-file"
+                        id="removeFile"
+                    >
+                        X
+                    </button>
+                </div>
+            </div>
+
+            <div class="divider">
+                OR TYPE / PASTE CONTENT
+            </div>
+
+            <!-- Assignment Content -->
+            <div class="form-group">
+                <label>
+                    Assignment Content
+                </label>
+
+                <textarea
+                    id="assignmentContent"
+                    placeholder="Paste or type your assignment content here..."
+                ></textarea>
+
+                <div class="word-info">
+                    <span>
+                        Current word count:
+                        <strong id="wordCount">0</strong>
+                    </span>
+
+                    <span id="limitMessage">
+                        Minimum: 50 words
+                    </span>
+                </div>
+            </div>
+
+            <!-- User can change this limit -->
+            <div class="settings">
+                <div class="form-group">
+                    <label>
+                        Minimum Words
+                    </label>
+
+                    <input
+                        type="number"
+                        id="minimumWords"
+                        value="50"
+                        min="1"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        Maximum File Size (MB)
+                    </label>
+
+                    <input
+                        type="number"
+                        id="maximumSize"
+                        value="10"
+                        min="1"
+                    >
+                </div>
+            </div>
+
+            <div class="actions">
+                <button
+                    type="button"
+                    class="clear-btn"
+                    id="clearBtn"
+                >
+                    Clear
+                </button>
+
+                <button
+                    type="button"
+                    class="submit-btn"
+                    id="submitBtn"
+                >
+                    Check Similarity
+                </button>
+            </div>
+
+            <div class="message" id="message"></div>
+
+            <!-- Result -->
+            <div class="result" id="result">
+
+                <div class="result-header">
+                    <div>
+                        <div class="result-title">
+                            Similarity Analysis Complete
+                        </div>
+
+                        <p style="margin-top: 5px; color: #718096; font-size: 12px;">
+                            Assignment processed successfully.
+                        </p>
+                    </div>
+
+                    <div class="score" id="scoreNumber">
+                        0%
+                    </div>
+                </div>
+
+                <div class="result-grid">
+
+                    <div class="result-item">
+                        <span>Student</span>
+                        <strong id="resultStudent">-</strong>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Assignment</span>
+                        <strong id="resultAssignment">-</strong>
+                    </div>
+
+                    <div class="result-item">
+                        <span>Words</span>
+                        <strong id="resultWords">-</strong>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>Note:</strong>
+                This project demonstrates JavaScript concepts such as
+                variables, data types, type conversion, operators,
+                conditions, loops, functions, arrays, objects, DOM,
+                events, form validation, Local Storage, Session Storage
+                and ES6 features. The similarity score is a demo score
+                and is not a real plagiarism detection algorithm.
+            </div>
+
+        </div>
+    </main>
+
+
+    <script>
+        /* =========================================================
+           1. VARIABLES - var, let and const
+           ========================================================= */
+
+        var projectName = "PlagiaCheck";
+
+        let selectedFile = null;
+
+        const studentName = document.getElementById("studentName");
+        const assignmentTitle = document.getElementById("assignmentTitle");
+        const assignmentContent = document.getElementById("assignmentContent");
+
+        const uploadBox = document.getElementById("uploadBox");
+        const fileInput = document.getElementById("fileInput");
+        const filePreview = document.getElementById("filePreview");
+        const fileName = document.getElementById("fileName");
+        const fileSize = document.getElementById("fileSize");
+        const removeFile = document.getElementById("removeFile");
+
+        const wordCount = document.getElementById("wordCount");
+        const minimumWords = document.getElementById("minimumWords");
+        const maximumSize = document.getElementById("maximumSize");
+
+        const submitBtn = document.getElementById("submitBtn");
+        const clearBtn = document.getElementById("clearBtn");
+
+        const message = document.getElementById("message");
+        const result = document.getElementById("result");
+
+
+        /* =========================================================
+           2. DATA TYPES AND TYPE CONVERSION
+           ========================================================= */
+
+        let studentAge = "20";          // String
+        let convertedAge = Number(studentAge); // String to Number
+        let isStudent = true;            // Boolean
+        let emptyValue = null;           // Null
+
+        // Type conversion example
+        let sizeText = "10";
+        let sizeNumber = parseInt(sizeText);
+
+
+        /* =========================================================
+           3. OPERATORS
+           ========================================================= */
+
+        let a = 10;
+        let b = 5;
+
+        let addition = a + b;       // Arithmetic
+        let subtraction = a - b;
+        let multiplication = a * b;
+        let division = a / b;
+
+        let total = 0;
+        total += 10;                // Assignment operator
+
+        let comparison = a > b;     // Comparison operator
+        let logicalCheck = a > 5 && b < 10; // Logical operator
+
+
+        /* =========================================================
+           4. WORD COUNT
+           Functions + Conditions + Array
+           ========================================================= */
+
+        function countWords(text) {
+
+            text = text.trim();
+
+            if (text === "") {
+                return 0;
+            }
+
+            const words = text.split(/\s+/);
+
+            return words.filter(Boolean).length;
+        }
+
+        function updateWordCount() {
+
+            const count = countWords(assignmentContent.value);
+
+            wordCount.textContent = count;
+
+            const limit = Number(minimumWords.value);
+
+            if (count >= limit) {
+                wordCount.className = "good";
+            } else {
+                wordCount.className = "warning";
+            }
+
+            document.getElementById("limitMessage").textContent =
+                "Minimum: " + limit + " words";
+        }
+
+
+        /* =========================================================
+           5. ARRAYS
+           Creating and accessing arrays
+           ========================================================= */
+
+        const allowedExtensions = [
+            "pdf",
+            "doc",
+            "docx",
+            "txt"
+        ];
+
+        console.log(allowedExtensions[0]);
+
+
+        /* =========================================================
+           6. ARRAY METHODS
+           push, pop, shift, unshift, splice, slice
+           ========================================================= */
+
+        let exampleArray = ["HTML", "CSS", "JavaScript"];
+
+        exampleArray.push("SQL");
+        exampleArray.pop();
+        exampleArray.unshift("Web");
+        exampleArray.shift();
+
+        exampleArray.splice(1, 0, "DOM");
+
+        let copiedArray = exampleArray.slice(0, 2);
+
+
+        /* =========================================================
+           7. ARRAY ITERATION / HIGHER ORDER FUNCTIONS
+           forEach, map, filter, reduce, sort
+           ========================================================= */
+
+        let numbers = [10, 20, 30, 40];
+
+        numbers.forEach(function(number) {
+            console.log(number);
+        });
+
+        let doubledNumbers = numbers.map(number => number * 2);
+
+        let bigNumbers = numbers.filter(number => number > 20);
+
+        let totalNumbers = numbers.reduce(
+            (sum, number) => sum + number,
+            0
+        );
+
+        numbers.sort((x, y) => x - y);
+
+
+        /* =========================================================
+           8. OBJECTS
+           Properties, Methods and Nested Objects
+           ========================================================= */
+
+        const student = {
+            name: "Student",
+            assignment: {
+                title: "JavaScript Assignment",
+                subject: "Web Development"
+            },
+
+            showDetails: function() {
+                return this.name + " - " + this.assignment.title;
+            }
+        };
+
+        console.log(student.name);
+        console.log(student.assignment.subject);
+
+        // Object destructuring
+        const {
+            name,
+            assignment: { title }
+        } = student;
+
+        // JSON
+        const studentJSON = JSON.stringify(student);
+        const studentObject = JSON.parse(studentJSON);
+
+
+        /* =========================================================
+           9. FUNCTION DECLARATION
+           ========================================================= */
+
+        function calculateScore(words) {
+
+            if (words < 50) {
+                return 0;
+            }
+
+            return Math.floor(Math.random() * 16) + 3;
+        }
+
+
+        /* =========================================================
+           10. FUNCTION EXPRESSION
+           ========================================================= */
+
+        const showProjectName = function() {
+            return projectName;
+        };
+
+
+        /* =========================================================
+           11. ARROW FUNCTION
+           ========================================================= */
+
+        const getFileExtension = fileName => {
+
+            const parts = fileName.split(".");
+
+            return parts[parts.length - 1].toLowerCase();
+        };
+
+
+        /* =========================================================
+           12. SCOPE
+           ========================================================= */
+
+        let globalMessage = "This variable is outside the function";
+
+        function scopeExample() {
+
+            let localMessage = "This variable is inside the function";
+
+            console.log(globalMessage);
+            console.log(localMessage);
+        }
+
+        scopeExample();
+
+
+        /* =========================================================
+           13. FILE UPLOAD
+           DOM + Event Handling + Form Input
+           ========================================================= */
+
+        uploadBox.addEventListener("click", function() {
+            fileInput.click();
+        });
+
+
+        fileInput.addEventListener("change", function() {
+
+            if (this.files.length > 0) {
+                handleFile(this.files[0]);
+            }
+
+        });
+
+
+        /* =========================================================
+           14. FILE HANDLING FUNCTION
+           ========================================================= */
+
+        function handleFile(file) {
+
+            const extension = getFileExtension(file.name);
+
+            const maxMB = Number(maximumSize.value);
+            const maxBytes = maxMB * 1024 * 1024;
+
+            if (!allowedExtensions.includes(extension)) {
+
+                showMessage(
+                    "Please upload PDF, DOC, DOCX or TXT file.",
+                    "error"
+                );
+
+                fileInput.value = "";
+                return;
+            }
+
+            if (file.size > maxBytes) {
+
+                showMessage(
+                    "File size should be less than " + maxMB + " MB.",
+                    "error"
+                );
+
+                fileInput.value = "";
+                return;
+            }
+
+            selectedFile = file;
+
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+
+            filePreview.classList.add("show");
+
+
+            /*
+                If TXT file is selected,
+                read its content using FileReader.
+            */
+
+            if (extension === "txt") {
+
+                const reader = new FileReader();
+
+                reader.onload = function(event) {
+
+                    assignmentContent.value =
+                        event.target.result;
+
+                    updateWordCount();
+                };
+
+                reader.readAsText(file);
+            }
+        }
+
+
+        /* =========================================================
+           15. FILE SIZE FUNCTION
+           ========================================================= */
+
+        function formatFileSize(bytes) {
+
+            if (bytes === 0) {
+                return "0 Bytes";
+            }
+
+            const units = ["Bytes", "KB", "MB", "GB"];
+
+            let index = Math.floor(
+                Math.log(bytes) / Math.log(1024)
+            );
+
+            return (
+                (bytes / Math.pow(1024, index)).toFixed(2)
+                + " "
+                + units[index]
+            );
+        }
+
+
+        /* =========================================================
+           16. DRAG AND DROP EVENTS
+           Mouse Events
+           ========================================================= */
+
+        uploadBox.addEventListener("dragover", function(event) {
+
+            event.preventDefault();
+
+            uploadBox.classList.add("dragover");
+        });
+
+
+        uploadBox.addEventListener("dragleave", function() {
+
+            uploadBox.classList.remove("dragover");
+        });
+
+
+        uploadBox.addEventListener("drop", function(event) {
+
+            event.preventDefault();
+
+            uploadBox.classList.remove("dragover");
+
+            const files = event.dataTransfer.files;
+
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+
+        /* =========================================================
+           17. REMOVE FILE
+           ========================================================= */
+
+        removeFile.addEventListener("click", function(event) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            selectedFile = null;
+
+            fileInput.value = "";
+
+            filePreview.classList.remove("show");
+
+            fileName.textContent = "";
+            fileSize.textContent = "";
+        });
+
+
+        /* =========================================================
+           18. KEYBOARD / INPUT EVENTS
+           ========================================================= */
+
+        assignmentContent.addEventListener(
+            "input",
+            updateWordCount
+        );
+
+        minimumWords.addEventListener(
+            "input",
+            updateWordCount
+        );
+
+
+        maximumSize.addEventListener(
+            "input",
+            function() {
+
+                if (Number(maximumSize.value) < 1) {
+                    maximumSize.value = 1;
+                }
+            }
+        );
+
+
+        /* =========================================================
+           19. FORM VALIDATION
+           Conditions + Logical Operators
+           ========================================================= */
+
+        function validateForm() {
+
+            const nameValue = studentName.value.trim();
+            const titleValue = assignmentTitle.value.trim();
+
+            const contentValue = assignmentContent.value.trim();
+
+            const requiredWords =
+                Number(minimumWords.value);
+
+            const currentWords =
+                countWords(contentValue);
+
+            if (nameValue === "") {
+
+                showMessage(
+                    "Please enter student name.",
+                    "error"
+                );
+
+                studentName.focus();
+
+                return false;
+            }
+
+            if (titleValue === "") {
+
+                showMessage(
+                    "Please enter assignment title.",
+                    "error"
+                );
+
+                assignmentTitle.focus();
+
+                return false;
+            }
+
+            if (!selectedFile && currentWords < requiredWords) {
+
+                showMessage(
+                    "Please upload a file or enter at least "
+                    + requiredWords
+                    + " words.",
+                    "error"
+                );
+
+                assignmentContent.focus();
+
+                return false;
+            }
+
+            return true;
+        }
+
+
+        /* =========================================================
+           20. MESSAGE FUNCTION
+           ========================================================= */
+
+        function showMessage(text, type) {
+
+            message.textContent = text;
+
+            message.className =
+                "message show " + type;
+        }
+
+
+        /* =========================================================
+           21. LOCAL STORAGE
+           Browser Data Management
+           ========================================================= */
+
+        function saveDraft() {
+
+            const draft = {
+
+                studentName: studentName.value,
+
+                assignmentTitle:
+                    assignmentTitle.value,
+
+                assignmentContent:
+                    assignmentContent.value,
+
+                minimumWords:
+                    minimumWords.value
+            };
+
+            localStorage.setItem(
+                "plagiaCheckDraft",
+                JSON.stringify(draft)
+            );
+        }
+
+
+        function loadDraft() {
+
+            const savedDraft =
+                localStorage.getItem(
+                    "plagiaCheckDraft"
+                );
+
+            if (savedDraft) {
+
+                const draft =
+                    JSON.parse(savedDraft);
+
+                studentName.value =
+                    draft.studentName || "";
+
+                assignmentTitle.value =
+                    draft.assignmentTitle || "";
+
+                assignmentContent.value =
+                    draft.assignmentContent || "";
+
+                minimumWords.value =
+                    draft.minimumWords || 50;
+
+                updateWordCount();
+            }
+        }
+
+
+        studentName.addEventListener(
+            "input",
+            saveDraft
+        );
+
+        assignmentTitle.addEventListener(
+            "input",
+            saveDraft
+        );
+
+        assignmentContent.addEventListener(
+            "input",
+            saveDraft
+        );
+
+
+        /* =========================================================
+           22. SESSION STORAGE
+           ========================================================= */
+
+        function saveSession() {
+
+            sessionStorage.setItem(
+                "lastProject",
+                projectName
+            );
+        }
+
+        saveSession();
+
+
+        /* =========================================================
+           23. SUBMIT EVENT
+           Form Handling + Functions + Conditions
+           ========================================================= */
+
+        submitBtn.addEventListener("click", function() {
+
+            if (!validateForm()) {
+                return;
+            }
+
+            submitBtn.disabled = true;
+
+            submitBtn.textContent =
+                "Checking...";
+
+
+            /*
+                Simulated result.
+                A real plagiarism API can be connected later.
+            */
+
+            setTimeout(function() {
+
+                const words =
+                    countWords(
+                        assignmentContent.value
+                    );
+
+                const similarity =
+                    calculateScore(words);
+
+
+                /* Object */
+                const submission = {
+
+                    student:
+                        studentName.value.trim(),
+
+                    assignment:
+                        assignmentTitle.value.trim(),
+
+                    words: words,
+
+                    file:
+                        selectedFile
+                            ? selectedFile.name
+                            : "Typed Content",
+
+                    similarity: similarity,
+
+                    date:
+                        new Date().toLocaleString()
+                };
+
+
+                /* Object to JSON */
+                localStorage.setItem(
+                    "lastSubmission",
+                    JSON.stringify(submission)
+                );
+
+
+                /* Show result in DOM */
+
+                document.getElementById(
+                    "resultStudent"
+                ).textContent =
+                    submission.student;
+
+                document.getElementById(
+                    "resultAssignment"
+                ).textContent =
+                    submission.assignment;
+
+                document.getElementById(
+                    "resultWords"
+                ).textContent =
+                    submission.words;
+
+                document.getElementById(
+                    "scoreNumber"
+                ).textContent =
+                    submission.similarity + "%";
+
+
+                result.classList.add("show");
+
+                showMessage(
+                    "Assignment submitted successfully.",
+                    "success"
+                );
+
+                submitBtn.disabled = false;
+
+                submitBtn.textContent =
+                    "Check Similarity";
+
+            }, 700);
+
+        });
+
+
+        /* =========================================================
+           24. CLEAR BUTTON
+           ========================================================= */
+
+        clearBtn.addEventListener("click", function() {
+
+            studentName.value = "";
+
+            assignmentTitle.value = "";
+
+            assignmentContent.value = "";
+
+            selectedFile = null;
+
+            fileInput.value = "";
+
+            filePreview.classList.remove("show");
+
+            result.classList.remove("show");
+
+            message.className = "message";
+
+            minimumWords.value = 50;
+
+            maximumSize.value = 10;
+
+            updateWordCount();
+
+            localStorage.removeItem(
+                "plagiaCheckDraft"
+            );
+        });
+
+
+        /* =========================================================
+           25. KEYBOARD EVENT
+           Ctrl + Enter submits the form
+           ========================================================= */
+
+        document.addEventListener("keydown", function(event) {
+
+            if (
+                event.ctrlKey &&
+                event.key === "Enter"
+            ) {
+                submitBtn.click();
+            }
+        });
+
+
+        /* =========================================================
+           26. DOM CONTENT LOADED
+           ========================================================= */
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function() {
+
+                loadDraft();
+
+                updateWordCount();
+            }
+        );
+
+
+        /*
+           ES6 FEATURES USED IN THIS PROJECT:
+
+           1. let / const
+           2. Template-like string concatenation
+           3. Spread/Rest concepts can be added easily
+           4. Destructuring:
+              const { name, assignment: { title } } = student;
+           5. Default parameter example:
+        */
+
+        function welcomeMessage(name = "Student") {
+
+            return `Welcome, ${name}!`;
+        }
+
+        console.log(
+            welcomeMessage()
+        );
+
+        console.log(
+            welcomeMessage(student.name)
+        );
+
+
+        /*
+           Spread operator example
+        */
+
+        const oldSubjects = ["HTML", "CSS"];
+
+        const allSubjects = [
+            ...oldSubjects,
+            "JavaScript",
+            "DOM"
+        ];
+
+        console.log(allSubjects);
+
+
+        /*
+           Rest parameter example
+        */
+
+        function addNumbers(...values) {
+
+            return values.reduce(
+                (sum, value) => sum + value,
+                0
+            );
+        }
+
+        console.log(
+            addNumbers(10, 20, 30)
+        );
+
+    </script>
+
+</body>
+</html>
