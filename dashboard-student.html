@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal - PlagiGuard</title>
+    
+    <!-- External CSS Links -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+
+    <!-- Embedded Design System (Guarantees styling even if CSS files are missing) -->
+    <style>
+        :root {
+            --bg-dark: #070913;
+            --bg-card: rgba(30, 41, 59, 0.55);
+            --bg-input: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(99, 102, 241, 0.3);
+            --text-primary: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-indigo: #6366f1;
+            --accent-cyan: #38bdf8;
+            --accent-green: #34d399;
+            --accent-yellow: #fbbf24;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* Subtle grid background pattern */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 85% 60%, rgba(56, 189, 248, 0.1) 0%, transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            z-index: -1;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .role-badge {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 0.4rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Metric Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .stat-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        /* Cards & Section Styling */
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.75rem;
+            backdrop-filter: blur(12px);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Drag and Drop Upload Area */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.4);
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent-indigo);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        /* Table Styling */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th {
+            padding: 0.85rem 1rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status Badges */
+        .badge-status {
+            padding: 0.3rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-processing {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-yellow);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Action Link Buttons */
+        .btn-link {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.35rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-link:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="dashboard-container">
+        
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div>
+                <h1 class="dashboard-title">Student Portal</h1>
+                <p class="text-muted">Upload assignments and track your personal submission status.</p>
+            </div>
+            <span class="role-badge">Role: Student</span>
+        </div>
+
+        <!-- Personal Metric Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">My Submissions</div>
+                <div class="stat-value">3</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Pending Processing</div>
+                <div class="stat-value" style="color: var(--accent-yellow);">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Successful Uploads</div>
+                <div class="stat-value" style="color: var(--accent-green);">2</div>
+            </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="section-card">
+            <h2 class="section-title">Submit Assignment</h2>
+            
+            <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📄</div>
+                <strong style="font-size: 1.1rem; display: block; margin-bottom: 0.25rem;">Click or drag file to submit</strong>
+                <span class="text-muted" style="font-size: 0.85rem;">Accepted formats: .txt, .docx, .pdf, .cpp, .py, .java</span>
+                <input type="file" id="file-input" style="display: none;" onchange="alert('Assignment submitted successfully!')">
+            </div>
+        </div>
+
+        <!-- Submission History Table -->
+        <div class="section-card">
+            <h2 class="section-title">My Submission History</h2>
+            
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Assignment</th>
+                            <th>Course</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                            <th>Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Data Structures Assignment</strong></td>
+                            <td class="text-muted">CS-201</td>
+                            <td class="text-muted">Today at 2:15 PM</td>
+                            <td><span class="badge-status badge-processing">Processing</span></td>
+                            <td><a href="#" class="btn-link">Download</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Algorithm Analysis</strong></td>
+                            <td class="text-muted">CS-302</td>
+                            <td class="text-muted">Oct 12, 2026</td>
+                            <td><span class="badge-status badge-success">Received</span></td>
+                            <td><a href="#" class="btn-link">Download</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Database Systems</strong></td>
+                            <td class="text-muted">CS-204</td>
+                            <td class="text-muted">Sep 28, 2026</td>
+                            <td><span class="badge-status badge-success">Received</span></td>
+                            <td><a href="#" class="btn-link">Download</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Navigation Script -->
+    <script src="js/ui/navbar.js"></script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Dashboard - PlagiGuard</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+    <main class="dashboard-container">
+        
+        <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 class="dashboard-title">Instructor Dashboard</h1>
+                <p class="text-muted">Class-wide analysis, Jaccard similarity metrics, and flagged submissions.</p>
+            </div>
+            <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid var(--border-highlight); padding: 0.5rem 1rem;">
+                Role: Instructor
+            </span>
+        </div>
+
+        <!-- Class Metrics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Total Submissions</div>
+                <div class="stat-value">24</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Flagged Pairs</div>
+                <div class="stat-value" style="color: #f87171;">7</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Highest Similarity</div>
+                <div class="stat-value" style="color: #fbbf24;">92%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Average Class Similarity</div>
+                <div class="stat-value" style="color: var(--accent-cyan);">38%</div>
+            </div>
+        </div>
+
+        <!-- Main Workspace Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Left: All Submissions Table -->
+            <div class="section-card">
+                <h2 class="section-title">Class Submissions</h2>
+                
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Assignment</th>
+                                <th>Submitted</th>
+                                <th>Similarity</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Aarav Sharma</strong></td>
+                                <td>Data Structures Assignment</td>
+                                <td class="text-muted">Today</td>
+                                <td><strong style="color: #f87171;">87%</strong></td>
+                                <td><span class="badge badge-danger">Flagged</span></td>
+                                <td><a href="#" class="btn btn-primary" style="padding: 0.35rem 0.85rem; font-size: 0.8rem;">Review</a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Meera Patel</strong></td>
+                                <td>Algorithm Analysis</td>
+                                <td class="text-muted">Yesterday</td>
+                                <td><strong style="color: #fbbf24;">76%</strong></td>
+                                <td><span class="badge badge-review">Review</span></td>
+                                <td><a href="#" class="btn btn-primary" style="padding: 0.35rem 0.85rem; font-size: 0.8rem;">Review</a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vihaan Rao</strong></td>
+                                <td>Database Systems</td>
+                                <td class="text-muted">2 days ago</td>
+                                <td><strong style="color: #34d399;">12%</strong></td>
+                                <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">Clean</span></td>
+                                <td><a href="#" class="btn btn-secondary" style="padding: 0.35rem 0.85rem; font-size: 0.8rem;">View</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right: Top Suspicious Pairs -->
+            <div class="section-card">
+                <h2 class="section-title">Top Suspicious Pairs</h2>
+                
+                <div class="pair-list">
+                    <div class="pair-item">
+                        <div>
+                            <div class="pair-students">Aarav S. ↔ Riya K.</div>
+                            <div class="pair-assignment">Data Structures</div>
+                        </div>
+                        <span class="badge badge-danger">92% Match</span>
+                    </div>
+
+                    <div class="pair-item">
+                        <div>
+                            <div class="pair-students">Meera P. ↔ Rohan M.</div>
+                            <div class="pair-assignment">Algorithm Analysis</div>
+                        </div>
+                        <span class="badge badge-danger">87% Match</span>
+                    </div>
+
+                    <div class="pair-item">
+                        <div>
+                            <div class="pair-students">Karan T. ↔ Arjun V.</div>
+                            <div class="pair-assignment">Database Systems</div>
+                        </div>
+                        <span class="badge badge-review">76% Match</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="js/ui/navbar.js"></script>
+</body>
+</html>
