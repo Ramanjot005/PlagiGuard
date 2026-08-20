@@ -1,0 +1,697 @@
+/* =========================================
+   PLAGIGUARD SETTINGS
+========================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    min-height: 100vh;
+
+    background:
+        linear-gradient(
+            135deg,
+            #dceeff,
+            #edf6ff,
+            #d8eaff
+        );
+
+    color: #173b70;
+
+}
+
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.settings-header {
+
+    width: min(1000px, 92%);
+
+    margin: 0 auto;
+
+    padding:
+        45px
+        0
+        25px;
+
+}
+
+
+.eyebrow {
+
+    display: inline-block;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: 2px;
+
+    color: #4c79b5;
+
+    margin-bottom: 8px;
+
+}
+
+
+.settings-header h1 {
+
+    font-size: 36px;
+
+    color: #21478b;
+
+    margin-bottom: 8px;
+
+}
+
+
+.settings-header p {
+
+    color: #687d9a;
+
+    font-size: 14px;
+
+}
+
+
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+
+.settings-container {
+
+    width: min(1000px, 92%);
+
+    margin:
+        0 auto
+        50px;
+
+}
+
+
+
+/* =========================================
+   CARD
+========================================= */
+
+.settings-card {
+
+    background: #ffffff;
+
+    border:
+        1px solid
+        #e1eaf4;
+
+    border-radius: 18px;
+
+    padding: 28px;
+
+    margin-bottom: 20px;
+
+    box-shadow:
+        0 10px 30px
+        rgba(
+            31,
+            73,
+            125,
+            0.10
+        );
+
+}
+
+
+.card-header {
+
+    margin-bottom: 20px;
+
+}
+
+
+.section-label {
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.5px;
+
+    color: #7391b7;
+
+}
+
+
+.card-header h2 {
+
+    font-size: 21px;
+
+    color: #21478b;
+
+    margin:
+        5px 0
+        6px;
+
+}
+
+
+.card-header p {
+
+    font-size: 13px;
+
+    color: #7b8da5;
+
+}
+
+
+
+/* =========================================
+   PROFILE
+========================================= */
+
+.profile-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            1fr
+        );
+
+    gap: 15px;
+
+}
+
+
+.profile-item {
+
+    background: #f6f9fd;
+
+    border:
+        1px solid
+        #e5edf6;
+
+    border-radius: 10px;
+
+    padding: 16px;
+
+}
+
+
+.profile-item span {
+
+    display: block;
+
+    font-size: 11px;
+
+    color: #8292a9;
+
+    margin-bottom: 6px;
+
+}
+
+
+.profile-item strong {
+
+    font-size: 15px;
+
+    color: #244674;
+
+}
+
+
+
+/* =========================================
+   SETTING ROW
+========================================= */
+
+.setting-row {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 30px;
+
+    padding:
+        20px 0;
+
+    border-bottom:
+        1px solid
+        #e9eff6;
+
+}
+
+
+.setting-row:last-child {
+
+    border-bottom: none;
+
+}
+
+
+.setting-info {
+
+    flex: 1;
+
+}
+
+
+.setting-info h3 {
+
+    font-size: 15px;
+
+    color: #244674;
+
+    margin-bottom: 5px;
+
+}
+
+
+.setting-info p {
+
+    max-width: 600px;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+
+    color: #8493a9;
+
+}
+
+
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.setting-control {
+
+    min-width: 180px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 12px;
+
+}
+
+
+select,
+input[type="number"] {
+
+    width: 160px;
+
+    padding:
+        11px
+        12px;
+
+    border:
+        1px solid
+        #cfdbe9;
+
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #244674;
+
+    font-size: 13px;
+
+    outline: none;
+
+}
+
+
+select:focus,
+input[type="number"]:focus {
+
+    border-color: #4c7dbb;
+
+}
+
+
+
+/* =========================================
+   RANGE
+========================================= */
+
+.threshold-control {
+
+    width: 260px;
+
+}
+
+
+.threshold-control input[type="range"] {
+
+    width: 190px;
+
+    accent-color: #356bb3;
+
+}
+
+
+.threshold-control strong {
+
+    min-width: 42px;
+
+    color: #21478b;
+
+}
+
+
+
+/* =========================================
+   TOGGLE
+========================================= */
+
+.switch {
+
+    position: relative;
+
+    width: 48px;
+
+    height: 26px;
+
+    flex-shrink: 0;
+
+}
+
+
+.switch input {
+
+    display: none;
+
+}
+
+
+.slider {
+
+    position: absolute;
+
+    inset: 0;
+
+    cursor: pointer;
+
+    background: #ccd7e5;
+
+    border-radius: 30px;
+
+    transition: 0.25s;
+
+}
+
+
+.slider::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 20px;
+
+    height: 20px;
+
+    left: 3px;
+
+    top: 3px;
+
+    background: white;
+
+    border-radius: 50%;
+
+    transition: 0.25s;
+
+}
+
+
+.switch input:checked + .slider {
+
+    background: #356bb3;
+
+}
+
+
+.switch input:checked + .slider::before {
+
+    transform:
+        translateX(22px);
+
+}
+
+
+
+/* =========================================
+   DANGER CARD
+========================================= */
+
+.danger-card {
+
+    background: #fffafa;
+
+    border-color: #f0d9d9;
+
+}
+
+
+.danger-card h2 {
+
+    color: #a74747;
+
+}
+
+
+.danger-label {
+
+    color: #b85c5c;
+
+}
+
+
+.danger-btn {
+
+    border: none;
+
+    background: #c75b5b;
+
+    color: white;
+
+    padding:
+        10px
+        18px;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+
+.danger-btn:hover {
+
+    background: #ad4848;
+
+}
+
+
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.settings-actions {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 12px;
+
+    margin-top: 25px;
+
+}
+
+
+.settings-actions button {
+
+    padding:
+        12px
+        22px;
+
+    border-radius: 9px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+
+.primary-btn {
+
+    border: none;
+
+    background: #356bb3;
+
+    color: white;
+
+}
+
+
+.primary-btn:hover {
+
+    background: #285994;
+
+}
+
+
+.secondary-btn {
+
+    border:
+        1px solid
+        #d5e0ed;
+
+    background: #ffffff;
+
+    color: #526984;
+
+}
+
+
+.secondary-btn:hover {
+
+    background: #f3f7fb;
+
+}
+
+
+
+/* =========================================
+   MESSAGE
+========================================= */
+
+.settings-message {
+
+    text-align: center;
+
+    min-height: 22px;
+
+    margin-top: 15px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: #356bb3;
+
+}
+
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 700px) {
+
+    .settings-header {
+
+        padding-top: 30px;
+
+    }
+
+
+    .settings-header h1 {
+
+        font-size: 30px;
+
+    }
+
+
+    .setting-row {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+    }
+
+
+    .setting-control {
+
+        width: 100%;
+
+        justify-content: flex-start;
+
+    }
+
+
+    .threshold-control {
+
+        width: 100%;
+
+    }
+
+
+    .threshold-control input[type="range"] {
+
+        width: 100%;
+
+    }
+
+
+    select,
+    input[type="number"] {
+
+        width: 100%;
+
+    }
+
+
+    .profile-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .settings-actions {
+
+        flex-direction: column;
+
+    }
+
+
+    .settings-actions button {
+
+        width: 100%;
+
+    }
+
+}
