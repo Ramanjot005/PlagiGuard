@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Student Results — PlagiGuard</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/phase1.css">
+</head>
+
+<body>
+    <script src="../js/app.js"></script>
+    <script src="../js/ui.js"></script>
+    <script>const u = PG.requireRole('student'); if (u) { const s = PG.getStudentSubmissions(u.id); pgLayout({ active: 'assignments', role: 'student', title: 'My Results', subtitle: 'Similarity and marks for your submitted work.', content: `<section class="section-card"><div class="table-responsive"><table class="data-table"><thead><tr><th>Assignment</th><th>Similarity</th><th>Marks</th><th>Feedback</th></tr></thead><tbody>${s.map(x => `<tr><td>${PG.escapeHtml(PG.getAssignments().find(a => a.id === x.assignmentId)?.title || '')}</td><td>${similarityBadge(x.maxSimilarity)}</td><td>${x.marks ?? 'Pending'}</td><td>${PG.escapeHtml(x.feedback || '—')}</td></tr>`).join('') || '<tr><td colspan="4">No results yet.</td></tr>'}</tbody></table></div></section>` }); }</script>
+</body>
+
+</html>
