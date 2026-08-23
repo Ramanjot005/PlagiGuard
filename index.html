@@ -1,148 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlagiGuard - Detect Similarity. Protect Academic Integrity.</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>PlagiGuard</title>
     <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/phase1.css">
 </head>
+
 <body>
-
-    <header class="hero">
-        <div class="container">
-            <div class="pill-badge">
-               I
-            </div>
-
-            <h1 class="hero-title">
-                Spot the copied assignments<br>
-                <span class="gradient-text">before you grade.</span>
-            </h1>
-
-            <p class="hero-subtitle">
-                PlagiGuard chops student text into overlapping n-grams and scores every submission pair with the Jaccard index. Receive a ranked list of suspicious pairs and clean visual heatmaps in seconds.
-            </p>
-
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                <a href="dashboard.html" class="btn btn-primary">Add a submission</a>
-                <a href="how-it-works.html" class="btn btn-secondary">How the scoring works</a>
-            </div>
-
-            <div class="hero-preview" style="margin-top: 3rem;">
-                <div class="card" style="max-width: 600px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <strong>Aarav Sharma ↔ Riya Kapoor</strong><br>
-                            <span class="text-muted" style="font-size:0.85rem;">📝 Data Structures Assignment</span>
+    <header class="pg-nav"><a class="brand" href="index.html"><span class="brand-icon">🛡️</span>PlagiGuard</a>
+        <nav class="nav-links"><a href="how-it-works.html">How It Works</a><a class="btn btn-secondary btn-sm"
+                href="login.html">Login</a><a class="btn btn-primary btn-sm" href="signup.html">Sign Up</a></nav>
+    </header>
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="pill-badge"><span class="pill-dot"></span>Vanilla JavaScript · No API</div>
+                <h1 class="hero-title">Assignment review with <span class="gradient-text">simple, transparent
+                        similarity.</span></h1>
+                <p class="hero-subtitle">Students upload or type assignments. PlagiGuard creates overlapping n-grams,
+                    calculates Jaccard similarity in the browser, and gives instructors a clear place to review and mark
+                    submissions.</p>
+                <div style="display:flex;gap:1rem;flex-wrap:wrap"><a href="signup.html" class="btn btn-primary">Create
+                        Student / Instructor Account</a><a href="how-it-works.html" class="btn btn-secondary">See How It
+                        Works</a></div>
+                <div class="hero-preview" style="margin-top:3rem">
+                    <div class="card" style="max-width:720px">
+                        <div class="section-heading">
+                            <div><strong>Instructor review preview</strong>
+                                <p class="text-muted">Same browser · localStorage · no external plagiarism service</p>
+                            </div><span class="badge badge-danger">68.4% similarity</span>
                         </div>
-                        <div>
-                            <span class="badge badge-danger">87% Similarity</span>
+                        <div class="pipeline" style="margin-top:1rem">
+                            <div class="pipeline-step">
+                                <div class="step-number">01</div><strong>Submit</strong>
+                                <p class="text-muted">Student text</p>
+                            </div>
+                            <div class="pipeline-step">
+                                <div class="step-number">02</div><strong>Tokenize</strong>
+                                <p class="text-muted">Clean words</p>
+                            </div>
+                            <div class="pipeline-step">
+                                <div class="step-number">03</div><strong>N-grams</strong>
+                                <p class="text-muted">3-word groups</p>
+                            </div>
+                            <div class="pipeline-step">
+                                <div class="step-number">04</div><strong>Jaccard</strong>
+                                <p class="text-muted">Score pairs</p>
+                            </div>
+                            <div class="pipeline-step">
+                                <div class="step-number">05</div><strong>Mark</strong>
+                                <p class="text-muted">Instructor</p>
+                            </div>
                         </div>
-                    </div>
-                    <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
-                        Status: <span class="badge badge-review">⚠️ Needs Review</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </header>
-
-    <section class="container stats-section">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number">98%</div>
-                <p class="text-muted">Accuracy Rate</p>
+        </section>
+        <section class="container stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">2</div>
+                    <p class="text-muted">Account roles</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100%</div>
+                    <p class="text-muted">Browser-side analysis</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">3→n</div>
+                    <p class="text-muted">Configurable n-gram size</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">0 API</div>
+                    <p class="text-muted">No server required for demo</p>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number">5K+</div>
-                <p class="text-muted">Submissions Analyzed</p>
+        </section>
+        <section class="container" style="padding:1rem 0 4rem">
+            <h2 style="text-align:center">Built around the JavaScript topics in your syllabus</h2>
+            <div class="problems-grid">
+                <div class="card problem-card">
+                    <div class="card-icon">🔤</div>
+                    <h3>Variables, arrays & objects</h3>
+                    <p class="text-muted">User, assignment and submission objects are stored and updated in JavaScript.
+                    </p>
+                </div>
+                <div class="card problem-card">
+                    <div class="card-icon">⚙️</div>
+                    <h3>Functions & higher-order methods</h3>
+                    <p class="text-muted">map, filter, reduce, sort and reusable functions power the dashboard views.
+                    </p>
+                </div>
+                <div class="card problem-card">
+                    <div class="card-icon">🌐</div>
+                    <h3>DOM & events</h3>
+                    <p class="text-muted">Forms, buttons, modal review screens and validation use DOM event handling.
+                    </p>
+                </div>
+                <div class="card problem-card">
+                    <div class="card-icon">💾</div>
+                    <h3>Local & session storage</h3>
+                    <p class="text-muted">Accounts, assignments, submissions and settings persist in this browser.</p>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number">500+</div>
-                <p class="text-muted">Instructors Trust Us</p>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">80%</div>
-                <p class="text-muted">Time Saved</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="container feature-section" style="padding: 3rem 0;">
-        <h2 style="text-align:center; margin-bottom:2rem; font-size: 2rem;">Academic Review Shouldn't Be a Manual Hunt</h2>
-        <div class="problems-grid">
-            <div class="card problem-card">
-                <div class="card-icon">📚</div>
-                <h3>Too Many Submissions</h3>
-                <p class="text-muted">Large classes generate hundreds of assignments every semester.</p>
-            </div>
-            <div class="card problem-card">
-                <div class="card-icon">🔍</div>
-                <h3>Manual Comparison</h3>
-                <p class="text-muted">Comparing documents manually consumes valuable instruction time.</p>
-            </div>
-            <div class="card problem-card">
-                <div class="card-icon">🧩</div>
-                <h3>Difficult Patterns</h3>
-                <p class="text-muted">Overlapping structural patterns are difficult to detect visually.</p>
-            </div>
-            <div class="card problem-card">
-                <div class="card-icon">⏱️</div>
-                <h3>Slow Review Cycle</h3>
-                <p class="text-muted">Instructors need quick signals to prioritize flagged assignments.</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="container pipeline-section" style="padding: 3rem 0;">
-        <h2 style="text-align:center; margin-bottom:2rem; font-size: 2rem;">A Clearer Way to Review Similarity</h2>
-        <div class="pipeline">
-            <div class="pipeline-step">
-                <div class="step-number">01</div>
-                <strong>📥 Submission</strong>
-                <p class="text-muted" style="font-size: 0.85rem;">Assignments collected</p>
-            </div>
-            <div class="pipeline-step">
-                <div class="step-number">02</div>
-                <strong>✅ Validation</strong>
-                <p class="text-muted" style="font-size: 0.85rem;">Text cleaned & parsed</p>
-            </div>
-            <div class="pipeline-step">
-                <div class="step-number">03</div>
-                <strong>⚙️ Processing</strong>
-                <p class="text-muted" style="font-size: 0.85rem;">N-grams generated</p>
-            </div>
-            <div class="pipeline-step">
-                <div class="step-number">04</div>
-                <strong>🔬 Analysis</strong>
-                <p class="text-muted" style="font-size: 0.85rem;">Jaccard index calculated</p>
-            </div>
-            <div class="pipeline-step">
-                <div class="step-number">05</div>
-                <strong>📊 Results</strong>
-                <p class="text-muted" style="font-size: 0.85rem;">Pairs ranked by score</p>
-            </div>
-            <div class="pipeline-step">
-                <div class="step-number">06</div>
-                <strong>👨‍🏫 Review</strong>
-                <p class="text-muted" style="font-size: 0.85rem;">Final instructor verdict</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="container cta-section">
-        <h2 style="font-size: 2.2rem; margin-bottom: 1rem;">Make assignment review simpler.</h2>
-        <p class="text-muted" style="font-size:1.1rem; max-width:600px; margin:0 auto 2rem auto;">
-            PlagiGuard gives instructors a fast starting point for analyzing code and assignment similarity.
-        </p>
-        <a href="dashboard.html" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.9rem 2rem;">Open Dashboard →</a>
-    </section>
-
-    <!-- Navigation script loaded strictly ONCE -->
-    <script src="js/ui/navbar.js"></script>
+        </section>
+    </main>
+    <script src="js/app.js"></script>
 </body>
+
 </html>
