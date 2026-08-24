@@ -13,32 +13,32 @@ function pgAvatarMarkup(user, className = 'nav-avatar') {
       : `<span class="${className}">${PG.escapeHtml(pgInitials(user?.name || 'PG'))}</span>`;
 }
 
-function pgTheme() {
-    return localStorage.getItem('pg-theme') || 'dark';
-}
+// function pgTheme() {
+//     return localStorage.getItem('pg-theme') || 'dark';
+// }
 
-function pgApplyTheme() {
-    document.documentElement.dataset.theme = pgTheme();
-}
+// function pgApplyTheme() {
+//     document.documentElement.dataset.theme = pgTheme();
+// }
 
-function pgToggleTheme() {
-    const next = pgTheme() === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('pg-theme', next);
-    pgApplyTheme();
-    document.querySelectorAll('[data-theme-label]').forEach(el => {
-        el.textContent = next === 'dark' ? 'Dark mode' : 'Light mode';
-    });
-    document.querySelectorAll('[data-theme-icon]').forEach(el => {
-        el.textContent = next === 'dark' ? '☾' : '☀';
-    });
-}
+// function pgToggleTheme() {
+//     const next = pgTheme() === 'dark' ? 'light' : 'dark';
+//     localStorage.setItem('pg-theme', next);
+//     pgApplyTheme();
+//     document.querySelectorAll('[data-theme-label]').forEach(el => {
+//         el.textContent = next === 'dark' ? 'Dark mode' : 'Light mode';
+//     });
+//     document.querySelectorAll('[data-theme-icon]').forEach(el => {
+//         el.textContent = next === 'dark' ? '☾' : '☀';
+//     });
+// }
 
-pgApplyTheme();
+// pgApplyTheme();
 
-function pgThemeButton() {
-    const dark = pgTheme() === 'dark';
-    return `<button class="icon-btn theme-btn" type="button" id="theme-toggle" aria-label="Toggle dark mode" title="${dark ? 'Switch to light mode' : 'Switch to dark mode'}"><span data-theme-icon>${dark ? '☾' : '☀'}</span><span class="theme-label" data-theme-label>${dark ? 'Dark mode' : 'Light mode'}</span></button>`;
-}
+// function pgThemeButton() {
+//     const dark = pgTheme() === 'dark';
+//     return `<button class="icon-btn theme-btn" type="button" id="theme-toggle" aria-label="Toggle dark mode" title="${dark ? 'Switch to light mode' : 'Switch to dark mode'}"><span data-theme-icon>${dark ? '☾' : '☀'}</span><span class="theme-label" data-theme-label>${dark ? 'Dark mode' : 'Light mode'}</span></button>`;
+// }
 
 function pgNotificationKey(userId) { return `pg_notifications_seen_${userId}`; }
 
@@ -181,7 +181,6 @@ function pgNav(active) {
           </nav>
           <div class="nav-actions">
             ${user ? pgNotificationsMarkup() : ''}
-            ${pgThemeButton()}
             ${user
               ? `<a class="nav-user" href="${root}profile.html" title="Open profile">${pgAvatarMarkup(user, 'nav-avatar')}<span class="nav-user-name">${PG.escapeHtml(user.name)}</span></a><button class="btn btn-secondary btn-sm" id="logout-btn">Logout</button>`
               : `<a class="btn btn-secondary btn-sm" href="${root}login.html">Login</a><a class="btn btn-primary btn-sm" href="${root}signup.html">Get Started</a>`}
@@ -269,7 +268,7 @@ function pgLayout({ active = '', title, subtitle, content, role, headerAction = 
         <div id="toast" class="pg-toast" aria-live="polite"></div>
     `;
     bindLogout();
-    document.getElementById('theme-toggle')?.addEventListener('click', pgToggleTheme);
+    // document.getElementById('theme-toggle')?.addEventListener('click', pgToggleTheme);
     bindNavMenu();
     bindNotifications();
 }
