@@ -1,7 +1,7 @@
 /*
  * PlagiGuard
  * Browser-only implementation: no API, no backend, no external plagiarism API.
- * Data is intentionally stored in localStorage for this academic/demo phase.
+ * Data is intentionally stored in localStorage for this browser-only build.
  */
 
 const PG = (() => {
@@ -51,17 +51,17 @@ const PG = (() => {
         {
             id: 'usr-inst-1', name: 'Demo Instructor', email: 'instructor@university.edu',
             password: 'password123', role: 'instructor', studentId: '',
-            bio: 'Instructor account', createdAt: new Date().toISOString()
+            bio: 'Instructor account', avatar: '', createdAt: new Date().toISOString()
         },
         {
             id: 'usr-stu-1', name: 'Aarav Sharma', email: 'aarav@student.edu',
             password: 'password123', role: 'student', studentId: 'STU001',
-            bio: 'JavaScript student', createdAt: new Date().toISOString()
+            bio: 'JavaScript student', avatar: '', createdAt: new Date().toISOString()
         },
         {
             id: 'usr-stu-2', name: 'Meera Kapoor', email: 'meera@student.edu',
             password: 'password123', role: 'student', studentId: 'STU002',
-            bio: 'Frontend development student', createdAt: new Date().toISOString()
+            bio: 'Frontend development student', avatar: '', createdAt: new Date().toISOString()
         }
     ];
 
@@ -90,6 +90,30 @@ const PG = (() => {
             .replaceAll('>', '&gt;')
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#039;');
+    }
+
+    function daysUntil(dateString) {
+        if (!dateString) return 'No due date';
+        const due = new Date(`${dateString}T23:59:59`);
+        const now = new Date();
+        const diff = Math.ceil((due - now) / 86400000);
+        if (Number.isNaN(diff)) return 'Invalid date';
+        if (diff < 0) return `Overdue by ${Math.abs(diff)} day${Math.abs(diff)===1?'':'s'}`;
+        if (diff === 0) return 'Due today';
+        if (diff === 1) return 'Due tomorrow';
+        return `${diff} days left`;
+    }
+
+    function deadlineState(dateString) {
+        if (!dateString) return 'none';
+        const due = new Date(`${dateString}T23:59:59`);
+        const now = new Date();
+        const diff = Math.ceil((due - now) / 86400000);
+        if (Number.isNaN(diff)) return 'none';
+        if (diff < 0) return 'overdue';
+        if (diff <= 2) return 'urgent';
+        if (diff <= 7) return 'soon';
+        return 'normal';
     }
 
     function formatDate(dateString) {
@@ -133,7 +157,8 @@ const PG = (() => {
     function compareTexts(textA, textB, n) {
         const gramsA = createNGrams(tokenize(textA), n);
         const gramsB = createNGrams(tokenize(textB), n);
-        const shared = [...new Set(gramsA)].filter(gram => new Set(gramsB).has(gram));
+        const gramsBSet = new Set(gramsB);
+        const shared = [...new Set(gramsA)].filter(gram => gramsBSet.has(gram));
         return {
             similarity: jaccard(gramsA, gramsB) * 100,
             matchingNgrams: shared.slice(0, 30),
@@ -166,7 +191,56 @@ const PG = (() => {
     }
 
     function saveUsers(users) { write(KEYS.users, users); }
+    function saveAssignments(assignments) { write(KEYS.assignments, assignments); }
     function saveSubmissions(submissions) { write(KEYS.submissions, submissions); }
+
+    function createAssignment({ title, course, description, dueDate, maxMarks }) {
+        const user = getCurrentUser();
+        if (!user || user.role !== 'instructor') throw new Error('Only instructors can create assignments.');
+        const cleanTitle = String(title || '').trim();
+        const cleanCourse = String(course || '').trim();
+        const cleanDescription = String(description || '').trim();
+        const cleanDueDate = String(dueDate || '').trim();
+        const marks = Number(maxMarks);
+        if (!cleanTitle || !cleanCourse || !cleanDescription || !cleanDueDate) {
+            throw new Error('Please complete all assignment fields.');
+        }
+        if (!Number.isFinite(marks) || marks <= 0) throw new Error('Maximum marks must be greater than 0.');
+        const assignments = getAssignments();
+        const assignment = {
+            id: uid('asg'),
+            title: cleanTitle,
+            course: cleanCourse,
+            description: cleanDescription,
+            dueDate: cleanDueDate,
+            maxMarks: marks,
+            createdBy: user.id,
+            createdAt: new Date().toISOString()
+        };
+        assignments.unshift(assignment);
+        saveAssignments(assignments);
+        return assignment;
+    }
+
+    function updateAssignment(id, changes) {
+        const user = getCurrentUser();
+        if (!user || user.role !== 'instructor') throw new Error('Only instructors can edit assignments.');
+        const assignments = getAssignments();
+        const index = assignments.findIndex(a => a.id === id);
+        if (index === -1) throw new Error('Assignment not found.');
+        const next = { ...assignments[index], ...changes, updatedAt: new Date().toISOString() };
+        assignments[index] = next;
+        saveAssignments(assignments);
+        return next;
+    }
+
+    function deleteAssignment(id) {
+        const user = getCurrentUser();
+        if (!user || user.role !== 'instructor') throw new Error('Only instructors can delete assignments.');
+        const assignments = getAssignments().filter(a => a.id !== id);
+        saveAssignments(assignments);
+        return true;
+    }
 
     function register({ name, email, password, role, studentId }) {
         const users = getUsers();
@@ -182,6 +256,7 @@ const PG = (() => {
             role,
             studentId: role === 'student' ? studentId.trim() : '',
             bio: '',
+            avatar: '',
             createdAt: new Date().toISOString()
         };
         users.push(user);
@@ -257,20 +332,26 @@ const PG = (() => {
     function recalculateSimilarities() {
         const settings = getSettings();
         const submissions = getSubmissions();
-        const updated = submissions.map(sub => ({ ...sub, maxSimilarity: 0, flagged: false, topMatchStudent: '', matchingNgrams: [] }));
+        const updated = submissions.map(sub => ({ ...sub, maxSimilarity: 0, flagged: false, topMatchStudent: '', topMatchSubmissionId: '', matchingNgrams: [] }));
 
+        // Compare every submission pair from different students.
+        // The assignment requirement is pairwise comparison across submissions,
+        // so submissions are not restricted to the same assignment.
         for (let i = 0; i < updated.length; i += 1) {
             for (let j = i + 1; j < updated.length; j += 1) {
-                if (updated[i].assignmentId !== updated[j].assignmentId) continue;
+                if (updated[i].studentId === updated[j].studentId) continue;
+
                 const result = compareTexts(updated[i].text, updated[j].text, settings.ngramSize);
                 if (result.similarity > updated[i].maxSimilarity) {
                     updated[i].maxSimilarity = result.similarity;
                     updated[i].topMatchStudent = updated[j].studentName;
+                    updated[i].topMatchSubmissionId = updated[j].id;
                     updated[i].matchingNgrams = result.matchingNgrams;
                 }
                 if (result.similarity > updated[j].maxSimilarity) {
                     updated[j].maxSimilarity = result.similarity;
                     updated[j].topMatchStudent = updated[i].studentName;
+                    updated[j].topMatchSubmissionId = updated[i].id;
                     updated[j].matchingNgrams = result.matchingNgrams;
                 }
             }
@@ -316,8 +397,9 @@ const PG = (() => {
     return {
         KEYS, DEFAULT_SETTINGS, init, getSettings, saveSettings, getUsers, getAssignments, getSubmissions,
         getCurrentUser, register, login, logout, updateCurrentUser, requireRole, saveSubmission,
+        createAssignment, updateAssignment, deleteAssignment,
         recalculateSimilarities, getStudentSubmissions, getInstructorSubmissions, markSubmission,
-        tokenize, createNGrams, jaccard, compareTexts, normalizeText, escapeHtml, formatDate,
+        tokenize, createNGrams, jaccard, compareTexts, normalizeText, escapeHtml, formatDate, daysUntil, deadlineState,
         getInitialPage
     };
 })();

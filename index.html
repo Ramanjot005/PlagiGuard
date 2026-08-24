@@ -1,116 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>PlagiGuard</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/home.css">
-    <link rel="stylesheet" href="css/phase1.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="PlagiGuard is a browser-first plagiarism and assignment review workspace for students, researchers and instructors.">
+<title>PlagiGuard — Free Plagiarism Checker for Students & Researchers</title>
+<link rel="stylesheet" href="css/base.css"><link rel="stylesheet" href="css/components.css"><link rel="stylesheet" href="css/home.css"><link rel="stylesheet" href="css/plagiguard.css">
 </head>
-
 <body>
-    <header class="pg-nav"><a class="brand" href="index.html"><span class="brand-icon">🛡️</span>PlagiGuard</a>
-        <nav class="nav-links"><a href="how-it-works.html">How It Works</a><a class="btn btn-secondary btn-sm"
-                href="login.html">Login</a><a class="btn btn-primary btn-sm" href="signup.html">Sign Up</a></nav>
-    </header>
-    <main>
-        <section class="hero">
-            <div class="container">
-                <div class="pill-badge"><span class="pill-dot"></span>Vanilla JavaScript · No API</div>
-                <h1 class="hero-title">Assignment review with <span class="gradient-text">simple, transparent
-                        similarity.</span></h1>
-                <p class="hero-subtitle">Students upload or type assignments. PlagiGuard creates overlapping n-grams,
-                    calculates Jaccard similarity in the browser, and gives instructors a clear place to review and mark
-                    submissions.</p>
-                <div style="display:flex;gap:1rem;flex-wrap:wrap"><a href="signup.html" class="btn btn-primary">Create
-                        Student / Instructor Account</a><a href="how-it-works.html" class="btn btn-secondary">See How It
-                        Works</a></div>
-                <div class="hero-preview" style="margin-top:3rem">
-                    <div class="card" style="max-width:720px">
-                        <div class="section-heading">
-                            <div><strong>Instructor review preview</strong>
-                                <p class="text-muted">Same browser · localStorage · no external plagiarism service</p>
-                            </div><span class="badge badge-danger">68.4% similarity</span>
-                        </div>
-                        <div class="pipeline" style="margin-top:1rem">
-                            <div class="pipeline-step">
-                                <div class="step-number">01</div><strong>Submit</strong>
-                                <p class="text-muted">Student text</p>
-                            </div>
-                            <div class="pipeline-step">
-                                <div class="step-number">02</div><strong>Tokenize</strong>
-                                <p class="text-muted">Clean words</p>
-                            </div>
-                            <div class="pipeline-step">
-                                <div class="step-number">03</div><strong>N-grams</strong>
-                                <p class="text-muted">3-word groups</p>
-                            </div>
-                            <div class="pipeline-step">
-                                <div class="step-number">04</div><strong>Jaccard</strong>
-                                <p class="text-muted">Score pairs</p>
-                            </div>
-                            <div class="pipeline-step">
-                                <div class="step-number">05</div><strong>Mark</strong>
-                                <p class="text-muted">Instructor</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section class="container stats-section">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number">2</div>
-                    <p class="text-muted">Account roles</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">100%</div>
-                    <p class="text-muted">Browser-side analysis</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">3→n</div>
-                    <p class="text-muted">Configurable n-gram size</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">0 API</div>
-                    <p class="text-muted">No server required for demo</p>
-                </div>
-            </div>
-        </section>
-        <section class="container" style="padding:1rem 0 4rem">
-            <h2 style="text-align:center">Built around the JavaScript topics in your syllabus</h2>
-            <div class="problems-grid">
-                <div class="card problem-card">
-                    <div class="card-icon">🔤</div>
-                    <h3>Variables, arrays & objects</h3>
-                    <p class="text-muted">User, assignment and submission objects are stored and updated in JavaScript.
-                    </p>
-                </div>
-                <div class="card problem-card">
-                    <div class="card-icon">⚙️</div>
-                    <h3>Functions & higher-order methods</h3>
-                    <p class="text-muted">map, filter, reduce, sort and reusable functions power the dashboard views.
-                    </p>
-                </div>
-                <div class="card problem-card">
-                    <div class="card-icon">🌐</div>
-                    <h3>DOM & events</h3>
-                    <p class="text-muted">Forms, buttons, modal review screens and validation use DOM event handling.
-                    </p>
-                </div>
-                <div class="card problem-card">
-                    <div class="card-icon">💾</div>
-                    <h3>Local & session storage</h3>
-                    <p class="text-muted">Accounts, assignments, submissions and settings persist in this browser.</p>
-                </div>
-            </div>
-        </section>
-    </main>
-    <script src="js/app.js"></script>
-</body>
+<div id="page-nav"></div>
+<main>
+<section class="hero public-hero">
+  <div class="container hero-shell">
+    <div class="hero-copy">
+      <span class="pill-badge"><span class="pill-dot"></span>Free plagiarism checker for students & researchers</span>
+      <h1 class="hero-title">Check similarity with a clearer, more professional workflow.</h1>
+      <p class="hero-subtitle">PlagiGuard helps students submit confidently and helps instructors review assignment pairs using transparent tokenization, n-grams and Jaccard similarity — all inside the browser.</p>
+      <div class="hero-actions">
+        <a href="signup.html" class="btn btn-primary">Get started free <span>→</span></a>
+        <a href="#quick-check" class="btn btn-secondary">Try a quick check</a>
+      </div>
+      <div class="hero-proof-row">
+        <div class="proof-item"><strong>Tokenize</strong><span>Normalize academic text</span></div>
+        <div class="proof-item"><strong>N-grams</strong><span>Find repeated phrasing</span></div>
+        <div class="proof-item"><strong>Jaccard</strong><span>Compute similarity</span></div>
+      </div>
+      <div class="hero-mini-banner"><img src="assets/plagiguard-hero.jpg" alt="PlagiGuard similarity checker preview"><div><strong>Built for students & researchers</strong><span>Clear reports, simple submission flow and instructor review.</span></div></div>
+    </div>
+    <div class="hero-report-card">
+      <div class="report-headline"><div><span class="eyebrow">SIMILARITY REPORT</span><h3>Instructor review snapshot</h3></div><span class="badge badge-danger">68.4% flagged</span></div>
+      <div class="report-score-row"><div class="report-score-ring"><strong>68%</strong><span>similarity</span></div><div class="report-metrics"><div><span>Top match</span><strong>Student B</strong></div><div><span>Shared n-grams</span><strong>12</strong></div><div><span>Review threshold</span><strong>35%</strong></div></div></div>
+      <div class="report-lines"><span style="width:74%"></span><span style="width:58%"></span><span style="width:82%"></span><span style="width:46%"></span></div>
+      <div class="report-caption"><span>Evidence-first review</span><span>Matched phrases highlighted for instructors</span></div>
+    </div>
+  </div>
+</section>
 
-</html>
+<section class="section trust-section">
+  <div class="container trust-grid">
+    <div><span class="eyebrow">BUILT FOR</span><strong>Students</strong><span>Submit, view status and review feedback.</span></div>
+    <div><span class="eyebrow">BUILT FOR</span><strong>Researchers</strong><span>Compare drafts and inspect repeated phrasing.</span></div>
+    <div><span class="eyebrow">BUILT FOR</span><strong>Instructors</strong><span>Publish assignments, compare submissions and mark work.</span></div>
+    <div><span class="eyebrow">STORAGE</span><strong>Browser-first</strong><span>No plagiarism API is required for this project build.</span></div>
+  </div>
+</section>
+
+<section class="section showcase-section">
+  <div class="container showcase-banner card">
+    <div class="showcase-copy"><span class="eyebrow">A BETTER ACADEMIC WORKSPACE</span><h2>Everything important is easier to find.</h2><p>Move from a public quick check to a structured student or instructor workspace without losing the clarity of the comparison process.</p><div class="showcase-points"><span>✓ Clear student results</span><span>✓ Instructor controls</span><span>✓ Assignment publishing</span><span>✓ Evidence-first reports</span></div><a class="btn btn-primary" href="how-it-works.html">See how it works <span>→</span></a></div>
+    <div class="showcase-media"><img src="assets/plagiguard-showcase.jpg" alt="PlagiGuard product screens and academic workflow"></div>
+  </div>
+</section>
+
+<section class="section value-section">
+  <div class="container"><div class="section-heading-row"><div><span class="eyebrow">WHY PLAGIGUARD</span><h2>Built to be clear before it is clever.</h2><p class="text-muted">A professional plagiarism workspace should make the important things obvious: what was submitted, how similarity was calculated, why a result was flagged and what happens next.</p></div></div>
+    <div class="value-grid">
+      <article class="value-card card"><span class="value-icon">⌁</span><h3>Transparent methodology</h3><p>Students and instructors can explain the pipeline from word validation and tokenization to n-grams and Jaccard similarity.</p></article>
+      <article class="value-card card"><span class="value-icon">◫</span><h3>Role-based workspace</h3><p>Students focus on their own work and results. Instructors get publishing, reporting, marking and settings controls.</p></article>
+      <article class="value-card card"><span class="value-icon">↗</span><h3>Evidence over guesswork</h3><p>Reports show the highest match and matching n-grams so a reviewer has something concrete to inspect.</p></article>
+      <article class="value-card card"><span class="value-icon">◈</span><h3>Designed for teaching</h3><p>Clear language and a readable interface make the project easier to demonstrate, test and present.</p></article>
+      <article class="value-card card"><span class="value-icon">⚙</span><h3>Instructor control</h3><p>Minimum words, n-gram size and review threshold remain instructor settings, keeping the comparison rules consistent.</p></article>
+      <article class="value-card card"><span class="value-icon">☼</span><h3>Friendly on every screen</h3><p>Responsive cards, strong visual hierarchy and dark/light mode keep the interface comfortable on laptops and smaller devices.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section quick-check-section" id="quick-check">
+  <div class="container">
+    <div class="section-heading-row">
+      <div><span class="eyebrow">FREE QUICK CHECK</span><h2>Compare two pieces of text before you submit.</h2><p class="text-muted">This demo uses the same local n-gram + Jaccard engine as the assignment workflow. It does not search the public web.</p></div>
+      <span class="live-engine-pill"><span></span>Browser analysis</span>
+    </div>
+    <div class="checker-shell card">
+      <div class="checker-column">
+        <div class="checker-label-row"><label for="quick-text-a">Text A</label><span id="quick-count-a">0 words</span></div>
+        <textarea id="quick-text-a" class="form-textarea checker-textarea" rows="10" placeholder="Paste your draft, research paragraph or assignment answer here..."></textarea>
+      </div>
+      <div class="checker-column">
+        <div class="checker-label-row"><label for="quick-text-b">Text B</label><span id="quick-count-b">0 words</span></div>
+        <textarea id="quick-text-b" class="form-textarea checker-textarea" rows="10" placeholder="Paste another version, source paragraph or sample submission here..."></textarea>
+      </div>
+      <div class="checker-controls">
+        <div class="checker-control"><label for="quick-ngram">N-gram size</label><select id="quick-ngram" class="form-input"><option value="2">2-gram</option><option value="3" selected>3-gram</option><option value="4">4-gram</option><option value="5">5-gram</option></select></div>
+        <button class="btn btn-primary checker-button" id="quick-analyze" type="button">Analyze similarity <span>→</span></button>
+        <div class="checker-result" id="quick-result" aria-live="polite"><span class="checker-result-label">Similarity</span><strong>—</strong><span>Enter two texts to compare.</span></div>
+      </div>
+      <div class="checker-disclaimer"><span>ⓘ</span><p><strong>Transparent by design.</strong> PlagiGuard’s project engine compares stored or pasted text using tokenization, n-grams and Jaccard similarity. It is not a search engine or internet-wide plagiarism database.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section feature-section" id="features">
+  <div class="container">
+    <div class="section-heading-row"><div><span class="eyebrow">FEATURES</span><h2>Everything important, without a crowded interface.</h2><p class="text-muted">The workspace is split by role so students see what they need while instructors get the review controls they need.</p></div></div>
+    <div class="feature-grid feature-grid-premium">
+      <article class="feature-card card"><div class="feature-icon">01</div><div><span class="feature-kicker">STUDENT WORKFLOW</span><h3>Submit with confidence</h3><p>Choose an assignment, validate word count, upload or paste text, then see whether the submission is awaiting comparison, flagged or clear.</p></div></article>
+      <article class="feature-card card"><div class="feature-icon">02</div><div><span class="feature-kicker">SIMILARITY ENGINE</span><h3>Understand the score</h3><p>Normalized tokens become n-grams and Jaccard similarity produces a readable percentage with matching evidence.</p></div></article>
+      <article class="feature-card card"><div class="feature-icon">03</div><div><span class="feature-kicker">INSTRUCTOR REVIEW</span><h3>Review, mark and publish</h3><p>Create the next assignment, inspect flagged pairs, open evidence and record marks and feedback in one workspace.</p></div></article>
+      <article class="feature-card card"><div class="feature-icon">04</div><div><span class="feature-kicker">REPORTS</span><h3>Professional similarity reports</h3><p>Use clear status badges, top matches, similarity evidence and a pairwise heatmap to focus review on what matters.</p></div></article>
+      <article class="feature-card card"><div class="feature-icon">05</div><div><span class="feature-kicker">PROFILE & THEME</span><h3>Make the workspace yours</h3><p>Add a profile picture, edit your account details and switch between dark and light themes whenever you prefer.</p></div></article>
+      <article class="feature-card card"><div class="feature-icon">06</div><div><span class="feature-kicker">ACADEMIC CLARITY</span><h3>Explain every step</h3><p>From validation to review, the method is written in plain language so the project is easier to understand and present.</p></div></article>
+    </div>
+  </div>
+</section>
+
+<section class="section workflow-section" id="how-it-works">
+  <div class="container workflow-grid">
+    <div>
+      <span class="eyebrow">HOW IT WORKS</span>
+      <h2>A simple academic integrity workflow.</h2>
+      <p class="text-muted workflow-intro">PlagiGuard keeps the process visible from submission to review, so a similarity score is treated as a signal for instructor inspection rather than a final judgment on its own.</p>
+      <a class="text-link" href="how-it-works.html">Explore the full workflow →</a>
+    </div>
+    <div class="workflow-steps">
+      <div class="workflow-step"><span>01</span><div><strong>Submit</strong><p>Student uploads or pastes their assignment.</p></div></div>
+      <div class="workflow-step"><span>02</span><div><strong>Normalize & tokenize</strong><p>Text is cleaned and converted into comparable tokens.</p></div></div>
+      <div class="workflow-step"><span>03</span><div><strong>Compare</strong><p>N-grams are compared pairwise with Jaccard similarity.</p></div></div>
+      <div class="workflow-step"><span>04</span><div><strong>Review & mark</strong><p>Instructors inspect matches, mark work and add feedback.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section analytics-section" id="analytics-preview">
+  <div class="container">
+    <div class="analytics-head section-header"><div><span class="eyebrow">ANALYTICS</span><h2>See the review pattern at a glance.</h2><p class="text-muted">The homepage preview uses this browser’s stored submissions when data exists, and an illustrative layout when the project is new.</p></div><span id="home-chart-mode" class="analytics-live-pill">Illustrative preview</span></div>
+    <div class="analytics-stat-grid">
+      <div class="analytics-stat"><span>Average similarity</span><strong id="home-avg-similarity">—</strong><small>Across stored submissions</small></div>
+      <div class="analytics-stat"><span>Submissions</span><strong id="home-submission-count">—</strong><small>Saved in this browser</small></div>
+      <div class="analytics-stat"><span>Flagged</span><strong id="home-flagged-count">—</strong><small>At or above the review threshold</small></div>
+    </div>
+    <div class="analytics-grid">
+      <article class="chart-card chart-card-wide"><div class="chart-card-head"><div><span class="chart-kicker">SIMILARITY TREND</span><h3>Submission similarity pattern</h3></div><span class="chart-note">0–100%</span></div><div class="spark-wrap"><svg id="similarity-spark" class="spark-chart" viewBox="0 0 520 150" preserveAspectRatio="none" role="img" aria-label="Similarity trend chart"></svg></div><div class="chart-axis"><span>Lower overlap</span><span>Higher overlap</span></div></article>
+      <article class="chart-card"><div class="chart-card-head"><div><span class="chart-kicker">REVIEW STATUS</span><h3>Flagged distribution</h3></div></div><div class="donut-wrap"><div id="status-donut" class="status-donut"><div id="status-donut-center" class="donut-center"><strong>—</strong><span>flagged</span></div></div></div><div class="donut-legend"><span><i class="legend-dot legend-flagged"></i>Flagged</span><span><i class="legend-dot legend-clear"></i>Clear</span></div></article>
+      <article class="chart-card"><div class="chart-card-head"><div><span class="chart-kicker">SIMILARITY BANDS</span><h3>Where results land</h3></div></div><div id="similarity-bars" class="analytics-bars"></div><p class="chart-footnote">Use the same threshold configured by the instructor for review decisions.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section solutions-section" id="solutions">
+  <div class="container"><div class="section-heading-row"><div><span class="eyebrow">SOLUTIONS</span><h2>Different roles, different priorities.</h2></div></div>
+    <div class="solutions-grid">
+      <article class="solution-card"><span class="solution-tag">FOR STUDENTS</span><h3>Submit, understand, improve.</h3><p>See your assignments, submit work, check the result and review marks and feedback without access to instructor-only controls.</p><a href="signup.html?role=student" class="text-link">Create student account →</a></article>
+      <article class="solution-card"><span class="solution-tag">FOR INSTRUCTORS</span><h3>Publish and review from one place.</h3><p>Create the next assignment, tune similarity settings, inspect submission pairs and record marks and feedback.</p><a href="signup.html?role=instructor" class="text-link">Create instructor account →</a></article>
+      <article class="solution-card"><span class="solution-tag">FOR RESEARCHERS</span><h3>Compare drafts transparently.</h3><p>Use the quick checker or stored assignment workflow to compare wording changes and repeated phrases without external APIs.</p><a href="#quick-check" class="text-link">Try the quick checker →</a></article>
+    </div>
+  </div>
+</section>
+
+<section class="section faq-section" id="faq">
+  <div class="container faq-grid"><div><span class="eyebrow">FAQ</span><h2>Questions before you use PlagiGuard?</h2><p class="text-muted">A few quick answers for students, researchers and instructors.</p></div><div class="faq-list">
+    <details open><summary>Does PlagiGuard search the whole internet?</summary><p>No. This project is browser-first and compares text available inside the application using tokenization, n-grams and Jaccard similarity. It does not call an internet plagiarism API.</p></details>
+    <details><summary>Can students change the similarity rules?</summary><p>No. N-gram size, threshold and minimum-word settings are instructor-only in the authenticated workspace.</p></details>
+    <details><summary>Can instructors create the next assignment?</summary><p>Yes. Instructors can create and publish assignments from the Assignments & Submissions workspace, where the new assignment then appears for students.</p></details>
+    <details><summary>Can students see whether they were flagged?</summary><p>Yes. Students see similarity, the highest match when available, and a clear Flagged, Not Flagged or Awaiting comparison status.</p></details>
+    <details><summary>Where is my data stored in this build?</summary><p>User accounts, settings, assignments and submissions are stored in the browser using localStorage, with the active login stored in sessionStorage.</p></details>
+  </div></div>
+</section>
+
+<section class="section cta-section">
+  <div class="container cta-card"><div><span class="eyebrow">READY TO USE PLAGIGUARD?</span><h2>Keep submission and review in one calm workspace.</h2><p>Start with a student account or instructor workspace and keep the similarity process transparent from the first draft to final feedback.</p></div><div class="cta-actions"><a href="signup.html" class="btn btn-primary">Create an account <span>→</span></a><a href="about.html" class="btn btn-secondary">About PlagiGuard</a></div></div>
+</section>
+
+<section class="section plans-section" id="pricing">
+  <div class="container"><div class="section-heading-row"><div><span class="eyebrow">PLANS</span><h2>Simple for this project build.</h2><p class="text-muted">This academic project is designed as a browser-first demonstration, so there are no paid tiers or external API charges.</p></div></div>
+    <div class="plan-card card"><div><span class="plan-kicker">PROJECT EDITION</span><h3>Browser-first workspace</h3><p>Student accounts, instructor accounts, assignments, similarity reports, marking, settings and local storage are included in one project.</p></div><div class="plan-badge">Free</div><ul><li>✓ Student and instructor roles</li><li>✓ N-gram + Jaccard comparison</li><li>✓ Assignment publishing</li><li>✓ Similarity reports + charts</li></ul><a href="signup.html" class="btn btn-primary">Get started</a></div>
+  </div>
+</section>
+
+<section class="section privacy-section"><div class="container privacy-strip"><div><span class="eyebrow">TRANSPARENT BY DESIGN</span><h3>Know what the score means.</h3><p>Similarity is a comparison signal. Instructors can inspect evidence and add context before assigning marks.</p></div><a href="how-it-works.html" class="text-link">Read the method →</a></div></section>
+</main>
+<div id="page-footer"></div>
+<script src="js/app.js"></script><script src="js/ui.js"></script><script src="js/pages/home.js"></script>
+<script>document.getElementById('page-nav').innerHTML = pgNav('home'); document.getElementById('page-footer').innerHTML = pgFooter(); document.getElementById('theme-toggle')?.addEventListener('click', pgToggleTheme); bindLogout(); bindNavMenu(); bindNavDropdowns(); bindQuickChecker();</script>
+</body></html>

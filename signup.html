@@ -4,46 +4,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Sign Up — PlagiGuard</title>
+    <meta name="description" content="Create a PlagiGuard student or instructor account.">
+    <title>Create Account — PlagiGuard</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/phase1.css">
+    <link rel="stylesheet" href="css/plagiguard.css">
 </head>
 
 <body>
-    <main class="auth-page">
-        <div class="auth-card">
-            <div class="auth-logo">
-                <div style="font-size:2.5rem">🛡️</div>
-                <h1>Create your account</h1>
-                <p class="text-muted">Choose the role that controls your dashboard</p>
-            </div>
-            <form id="signup-form">
-                <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="name"
-                        required placeholder="Your full name"></div>
-                <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email"
-                        id="email" required placeholder="you@university.edu"></div>
-                <div class="form-group"><label class="form-label">Role</label><select class="form-input" id="role">
-                        <option value="student">Student</option>
-                        <option value="instructor">Instructor</option>
-                    </select></div>
-                <div class="form-group" id="student-id-group"><label class="form-label">Student ID</label><input
-                        class="form-input" id="student-id" placeholder="STU001"></div>
-                <div class="form-group"><label class="form-label">Password</label>
-                    <div style="position:relative"><input class="form-input" type="password" id="password" minlength="6"
-                            required placeholder="At least 6 characters"><button type="button" class="toggle-password"
-                            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer">Show</button>
+    <div id="page-nav"></div>
+    <main class="auth-page auth-page-pro">
+        <div class="auth-shell auth-shell-pro signup-shell-pro">
+            <section class="auth-visual auth-visual-pro">
+                <div>
+                    <div class="auth-brandline"><span class="brand-icon">🛡️</span>PlagiGuard</div><span
+                        class="auth-eyebrow">BUILD YOUR WORKSPACE</span>
+                    <h2>Choose your role. Get the right tools from day one.</h2>
+                    <p>Students get submission and results tools. Instructors get assignment publishing, reports,
+                        settings and marking.</p>
+                    <div class="role-choice-preview">
+                        <div><span>Student</span><strong>Submit · Results · Feedback</strong></div>
+                        <div><span>Instructor</span><strong>Assignments · Reports · Settings</strong></div>
                     </div>
+                </div><img class="auth-showcase-image" src="assets/plagiguard-hero.jpg"
+                    alt="PlagiGuard dashboard showcase">
+            </section>
+            <section class="auth-form-panel auth-form-panel-pro">
+                <div class="auth-logo"><span class="eyebrow">GET STARTED</span>
+                    <h1>Create your account</h1>
+                    <p class="text-muted">It only takes a minute. Your role controls which workspace you can access.</p>
                 </div>
-                <div class="auth-error" id="auth-error"></div><button class="btn btn-primary" type="submit"
-                    style="width:100%">Create Account & Open Dashboard</button>
-            </form>
-            <p class="text-muted" style="text-align:center;margin-top:1.5rem">Already registered? <a
-                    href="login.html">Login</a></p>
+                <form id="signup-form">
+                    <div class="form-grid-2">
+                        <div class="form-group"><label class="form-label" for="name">Full name</label><input
+                                class="form-input" id="name" autocomplete="name" required placeholder="Your full name">
+                        </div>
+                        <div class="form-group"><label class="form-label" for="email">Email address</label><input
+                                class="form-input" type="email" id="email" autocomplete="email" required
+                                placeholder="you@university.edu"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label" for="role">Choose your role</label><select
+                            class="form-input" id="role">
+                            <option value="student">Student</option>
+                            <option value="instructor">Instructor</option>
+                        </select><small class="field-hint">You will be sent to the matching dashboard after
+                            sign-up.</small></div>
+                    <div class="form-group" id="student-id-group"><label class="form-label" for="student-id">Student
+                            ID</label><input class="form-input" id="student-id" placeholder="STU001"><small
+                            class="field-hint">Required for student accounts.</small></div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label class="form-label" for="password">Password</label>
+                            <div class="password-wrap"><input class="form-input" type="password" id="password"
+                                    minlength="6" required placeholder="At least 6 characters"><button type="button"
+                                    class="password-toggle" id="password-toggle">Show</button></div>
+                        </div>
+                        <div class="form-group"><label class="form-label" for="confirm-password">Confirm
+                                password</label>
+                            <div class="password-wrap"><input class="form-input" type="password" id="confirm-password"
+                                    minlength="6" required placeholder="Repeat password"><button type="button"
+                                    class="password-toggle" id="confirm-toggle">Show</button></div>
+                        </div>
+                    </div>
+                    <label class="terms-check"><input type="checkbox" id="agree" required> <span>I understand this is a
+                            browser-first academic project and my data is stored locally in this build.</span></label>
+                    <div class="auth-error" id="auth-error"></div><button class="btn btn-primary auth-submit"
+                        type="submit">Create account <span>→</span></button>
+                </form>
+                <p class="auth-switch">Already registered? <a href="login.html">Sign in</a></p>
+            </section>
         </div>
     </main>
+    <div id="page-footer"></div>
     <script src="js/app.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/pages/signup.js"></script>
+    <script>document.getElementById('page-nav').innerHTML = pgNav(''); document.getElementById('page-footer').innerHTML = pgFooter(); document.getElementById('theme-toggle')?.addEventListener('click', pgToggleTheme); bindLogout(); bindNavMenu(); bindNavDropdowns(); const t1 = document.getElementById('password-toggle'), t2 = document.getElementById('confirm-toggle');[[t1, 'password'], [t2, 'confirm-password']].forEach(([b, id]) => b?.addEventListener('click', () => { const p = document.getElementById(id); p.type = p.type === 'password' ? 'text' : 'password'; b.textContent = p.type === 'password' ? 'Show' : 'Hide'; }));</script>
 </body>
 
 </html>

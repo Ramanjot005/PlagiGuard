@@ -5,19 +5,69 @@ function render() {
     const submissions = PG.getInstructorSubmissions();
     const assignments = PG.getAssignments();
     pgLayout({
-        active: 'assignments', role: 'instructor', title: 'Student Submissions',
-        subtitle: 'Inspect individual assignments, similarity results and marking status.',
-        content: `<section class="section-card"><div class="toolbar"><div><strong>${submissions.length}</strong> total submissions</div><div class="filter-group"><label for="assignment-filter">Assignment</label><select id="assignment-filter" class="form-input form-input-sm"><option value="all">All assignments</option>${assignments.map(a => `<option value="${a.id}">${PG.escapeHtml(a.title)}</option>`).join('')}</select><label><input type="checkbox" id="flag-filter"> Flagged only</label></div></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Student</th><th>Assignment</th><th>Words</th><th>Similarity</th><th>Status</th><th>Marks</th><th></th></tr></thead><tbody id="submission-rows"></tbody></table></div></section>`
+        active: 'assignments', role: 'instructor', title: 'Assignments & Submissions',
+        subtitle: 'Create new assignments for the next submission cycle, then review and mark student work.',
+        content: `
+          <div class="management-grid">
+            <section class="section-card" id="new-assignment">
+              <div class="section-heading"><div><h2 class="section-title">Create New Assignment</h2><p class="text-muted">New assignments appear automatically in every student account.</p></div><span class="badge badge-success">Instructor only</span></div>
+              <form id="create-assignment-form" class="stack-form">
+                <div class="form-grid-2">
+                  <div class="form-group"><label class="form-label" for="a-title">Assignment title</label><input id="a-title" class="form-input" required placeholder="e.g. ES6 Features"></div>
+                  <div class="form-group"><label class="form-label" for="a-course">Course / module</label><input id="a-course" class="form-input" required placeholder="e.g. JavaScript Programming"></div>
+                </div>
+                <div class="form-group"><label class="form-label" for="a-description">Instructions</label><textarea id="a-description" class="form-textarea" rows="4" required placeholder="Explain what students should submit..."></textarea></div>
+                <div class="form-grid-2">
+                  <div class="form-group"><label class="form-label" for="a-due">Due date</label><input id="a-due" class="form-input" type="date" required></div>
+                  <div class="form-group"><label class="form-label" for="a-marks">Maximum marks</label><input id="a-marks" class="form-input" type="number" min="1" max="1000" value="10" required></div>
+                </div>
+                <div id="create-assignment-error" class="auth-error"></div>
+                <div><button class="btn btn-primary" type="submit">＋ Publish Assignment</button></div>
+              </form>
+            </section>
+            <section class="section-card">
+              <div class="section-heading"><div><h2 class="section-title">Published Assignments</h2><p class="text-muted">${assignments.length} available assignment${assignments.length === 1 ? '' : 's'}</p></div></div>
+              <div class="assignment-toolbar compact-toolbar"><div><span class="eyebrow">PUBLISHED WORK</span><strong>Manage the assignment cycle</strong><small>Search, edit or remove assignments.</small></div><input id="assignment-search" class="form-input search-input" type="search" placeholder="Search assignments..."></div><div class="assignment-admin-list" id="assignment-admin-list">
+                ${assignments.map(a => `<article class="admin-assignment-card" data-assignment-search="${PG.escapeHtml(`${a.title} ${a.course} ${a.description}`.toLowerCase())}"><div><span class="eyebrow">${PG.escapeHtml(a.course)}</span><h3>${PG.escapeHtml(a.title)}</h3><p>${PG.escapeHtml(a.description)}</p></div><div class="admin-assignment-meta"><span class="deadline-badge ${PG.deadlineState(a.dueDate)}">${PG.daysUntil(a.dueDate)}</span><span>Due ${PG.formatDate(a.dueDate)}</span><strong>${a.maxMarks} marks</strong><div class="admin-card-actions"><button class="btn btn-secondary btn-sm edit-assignment-btn" data-id="${a.id}">Edit</button><button class="btn btn-danger btn-sm delete-assignment-btn" data-id="${a.id}">Delete</button></div></div></article>`).join('')}
+              </div>
+            </section>
+          </div>
+
+          <section class="section-card" style="margin-top:1rem">
+            <div class="section-heading"><div><h2 class="section-title">Student Submissions</h2><p class="text-muted">Review individual submissions, similarity results and marking status.</p></div>
+              <div class="filter-group"><select id="assignment-filter" class="form-input form-input-sm"><option value="all">All assignments</option>${assignments.map(a => `<option value="${a.id}">${PG.escapeHtml(a.title)}</option>`).join('')}</select><label><input type="checkbox" id="flag-filter"> Flagged only</label></div>
+            </div>
+            <div class="table-responsive"><table class="data-table"><thead><tr><th>Student</th><th>Assignment</th><th>Words</th><th>Similarity</th><th>Status</th><th>Marks</th><th></th></tr></thead><tbody id="submission-rows"></tbody></table></div>
+          </section>`
+    });
+
+    document.getElementById('create-assignment-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const error = document.getElementById('create-assignment-error');
+      error.textContent = '';
+      try {
+        const assignment = PG.createAssignment({
+          title: document.getElementById('a-title').value,
+          course: document.getElementById('a-course').value,
+          description: document.getElementById('a-description').value,
+          dueDate: document.getElementById('a-due').value,
+          maxMarks: document.getElementById('a-marks').value
+        });
+        showToast(`"${assignment.title}" is now available to students.`, 'success');
+        render();
+      } catch (err) { error.textContent = err.message; }
     });
 
     function updateRows() {
         const selected = document.getElementById('assignment-filter').value;
         const flaggedOnly = document.getElementById('flag-filter').checked;
-        const rows = submissions.filter(s => (selected === 'all' || s.assignmentId === selected) && (!flaggedOnly || s.flagged)).map(s => {
-            const a = assignments.find(item => item.id === s.assignmentId);
-            return `<tr><td><strong>${PG.escapeHtml(s.studentName)}</strong></td><td>${PG.escapeHtml(a?.title || '')}</td><td>${s.wordCount}</td><td>${similarityBadge(s.maxSimilarity)}${s.topMatchStudent ? `<div class="table-sub">vs. ${PG.escapeHtml(s.topMatchStudent)}</div>` : ''}</td><td>${badge(s.status, s.status === 'Marked' ? 'success' : s.flagged ? 'danger' : 'review')}</td><td>${s.marks === null ? 'Pending' : `${s.marks}/${a?.maxMarks ?? 10}`}</td><td><button class="btn btn-primary btn-sm review-btn" data-id="${s.id}">Review & Mark</button></td></tr>`;
+        const currentSubmissions = PG.getInstructorSubmissions();
+        const currentAssignments = PG.getAssignments();
+        const rows = currentSubmissions.filter(s => (selected === 'all' || s.assignmentId === selected) && (!flaggedOnly || s.flagged)).map(s => {
+            const a = currentAssignments.find(item => item.id === s.assignmentId);
+            return `<tr><td><strong>${PG.escapeHtml(s.studentName)}</strong><div class="table-sub">${PG.escapeHtml(PG.getUsers().find(u => u.id === s.studentId)?.studentId || '')}</div></td><td>${PG.escapeHtml(a?.title || '')}</td><td>${s.wordCount}</td><td>${similarityBadge(s.maxSimilarity)}${s.topMatchStudent ? `<div class="table-sub">vs. ${PG.escapeHtml(s.topMatchStudent)}</div>` : ''}</td><td>${badge(s.status, s.status === 'Marked' ? 'success' : s.flagged ? 'danger' : 'review')}</td><td>${s.marks === null ? 'Pending' : `${s.marks}/${a?.maxMarks ?? 10}`}</td><td><button class="btn btn-primary btn-sm review-btn" data-id="${s.id}">Review & Mark</button></td></tr>`;
         }).join('');
-        document.getElementById('submission-rows').innerHTML = rows || `<tr><td colspan="7">No submissions match this filter.</td></tr>`;
+        document.getElementById('submission-rows').innerHTML = rows || `<tr><td colspan="7"><div class="empty-state"><div>◌</div><p>No submissions match this filter.</p></div></td></tr>`;
         document.querySelectorAll('.review-btn').forEach(btn => btn.addEventListener('click', () => openReview(btn.dataset.id)));
     }
     updateRows();
@@ -30,18 +80,48 @@ function openReview(id) {
     const a = PG.getAssignments().find(item => item.id === s.assignmentId);
     const wrap = document.createElement('div');
     wrap.className = 'modal-backdrop';
-    wrap.innerHTML = `<div class="modal-card"><button class="modal-close">×</button><div class="modal-header"><div><span class="eyebrow">${PG.escapeHtml(s.studentName)}</span><h2>${PG.escapeHtml(a.title)}</h2></div>${similarityBadge(s.maxSimilarity)}</div><pre class="submission-preview">${PG.escapeHtml(s.text)}</pre><div class="review-actions"><label>Marks <input class="form-input" id="quick-marks" type="number" min="0" max="${a.maxMarks}" value="${s.marks ?? ''}"></label><button class="btn btn-primary" id="save-quick">Save mark</button></div><div class="match-panel"><strong>Jaccard details</strong><p class="text-muted">${s.topMatchStudent ? `Highest match: ${PG.escapeHtml(s.topMatchStudent)} at ${s.maxSimilarity.toFixed(1)}%.` : 'No comparison partner yet.'}</p>${s.matchingNgrams?.length ? `<div class="ngram-list">${s.matchingNgrams.map(g => `<span class="ngram-tag">${PG.escapeHtml(g)}</span>`).join('')}</div>` : ''}</div></div>`;
+    wrap.innerHTML = `<div class="modal-card"><button class="modal-close">×</button><div class="modal-header"><div><span class="eyebrow">SUBMISSION REVIEW</span><h2>${PG.escapeHtml(a?.title || 'Submission')}</h2><p class="text-muted">${PG.escapeHtml(s.studentName)} · ${PG.formatDate(s.submittedAt)}</p></div><div>${similarityBadge(s.maxSimilarity)}</div></div><div class="review-grid"><div><h3>Student submission</h3><pre class="submission-preview">${PG.escapeHtml(s.text)}</pre></div><div><h3>Instructor marking</h3><form id="mark-form" class="stack-form"><div class="form-group"><label class="form-label">Marks / ${a?.maxMarks ?? 10}</label><input class="form-input" id="marks" type="number" min="0" max="${a?.maxMarks ?? 10}" step="0.5" value="${s.marks ?? ''}" required></div><div class="form-group"><label class="form-label">Status</label><select class="form-input" id="status"><option ${s.status === 'Marked' ? 'selected' : ''}>Marked</option><option ${s.status === 'Needs Revision' ? 'selected' : ''}>Needs Revision</option><option ${s.status === 'Approved' ? 'selected' : ''}>Approved</option></select></div><div class="form-group"><label class="form-label">Feedback</label><textarea class="form-textarea" id="feedback" rows="5" placeholder="Write feedback for the student...">${PG.escapeHtml(s.feedback)}</textarea></div><div id="mark-error" class="auth-error"></div><button class="btn btn-primary" type="submit">Save Mark</button></form></div></div>${s.matchingNgrams?.length ? `<div class="match-panel"><strong>Matching n-grams</strong><div class="ngram-list">${s.matchingNgrams.map(g => `<span class="ngram-tag">${PG.escapeHtml(g)}</span>`).join('')}</div>${s.topMatchStudent ? `<p class="text-muted">Top match: ${PG.escapeHtml(s.topMatchStudent)}</p>` : ''}</div>` : ''}</div>`;
     document.body.appendChild(wrap);
     wrap.querySelector('.modal-close').addEventListener('click', () => wrap.remove());
-    wrap.addEventListener('click', e => { if (e.target === wrap) wrap.remove(); });
-    wrap.querySelector('#save-quick').addEventListener('click', () => {
-        const marks = Number(wrap.querySelector('#quick-marks').value);
-        if (marks < 0 || marks > a.maxMarks) { showToast(`Enter marks between 0 and ${a.maxMarks}.`, 'error'); return; }
-        PG.markSubmission(id, marks, s.feedback, 'Marked');
+    wrap.addEventListener('click', event => { if (event.target === wrap) wrap.remove(); });
+    wrap.querySelector('#mark-form').addEventListener('submit', event => {
+      event.preventDefault();
+      const error = wrap.querySelector('#mark-error');
+      error.textContent = '';
+      try {
+        const marks = Number(wrap.querySelector('#marks').value);
+        if (marks < 0 || marks > (a?.maxMarks ?? 10)) throw new Error('Marks must be inside the assignment range.');
+        PG.markSubmission(id, marks, wrap.querySelector('#feedback').value, wrap.querySelector('#status').value);
         wrap.remove();
-        showToast('Mark saved.', 'success');
+        showToast('Mark saved successfully.', 'success');
         render();
+      } catch (e) { error.textContent = e.message; }
     });
 }
 
 render();
+
+
+function bindAssignmentManagement() {
+  document.getElementById('assignment-search')?.addEventListener('input', e => {
+    const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('#assignment-admin-list .admin-assignment-card').forEach(card => { card.hidden = !!q && !card.dataset.assignmentSearch.includes(q); });
+  });
+  document.querySelectorAll('.delete-assignment-btn').forEach(btn => btn.addEventListener('click', () => {
+    const a = PG.getAssignments().find(x => x.id === btn.dataset.id);
+    if (!a || !confirm(`Delete "${a.title}"? Existing student submissions will remain as historical records.`)) return;
+    PG.deleteAssignment(a.id); render(); showToast('Assignment deleted.', 'success');
+  }));
+  document.querySelectorAll('.edit-assignment-btn').forEach(btn => btn.addEventListener('click', () => {
+    const a = PG.getAssignments().find(x => x.id === btn.dataset.id); if (!a) return;
+    const title = prompt('Assignment title', a.title); if (title===null) return;
+    const course = prompt('Course / module', a.course); if (course===null) return;
+    const description = prompt('Instructions', a.description); if (description===null) return;
+    const dueDate = prompt('Due date (YYYY-MM-DD)', a.dueDate); if (dueDate===null) return;
+    const marks = prompt('Maximum marks', a.maxMarks); if (marks===null) return;
+    try { PG.updateAssignment(a.id, { title:title.trim(), course:course.trim(), description:description.trim(), dueDate:dueDate.trim(), maxMarks:Number(marks) }); render(); showToast('Assignment updated.', 'success'); }
+    catch(err) { showToast(err.message, 'error'); }
+  }));
+}
+
+bindAssignmentManagement();

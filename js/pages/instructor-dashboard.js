@@ -6,69 +6,71 @@ function renderInstructorDashboard() {
     const students = PG.getUsers().filter(u => u.role === 'student');
     const assignments = PG.getAssignments();
     const flagged = submissions.filter(s => s.flagged);
-    const marked = submissions.filter(s => s.marks !== null);
+    const marked = submissions.filter(s => s.marks !== null && s.marks !== undefined);
     const average = marked.length ? marked.reduce((sum, s) => sum + Number(s.marks), 0) / marked.length : 0;
+    const pending = submissions.length - marked.length;
+    const reviewRate = submissions.length ? Math.round((marked.length / submissions.length) * 100) : 0;
+    const recent = [...submissions].sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt)).slice(0,7);
+    const similarityBands = [
+        { label:'0–20%', min:0, max:20 }, { label:'21–40%', min:21, max:40 },
+        { label:'41–60%', min:41, max:60 }, { label:'61–80%', min:61, max:80 }, { label:'81–100%', min:81, max:100 }
+    ].map(b => ({...b, count: submissions.filter(s => { const v=Number(s.maxSimilarity)||0; return v>=b.min && v<=b.max; }).length}));
+    const maxBand = Math.max(1, ...similarityBands.map(b=>b.count));
+    const assignmentStats = assignments.slice(0,5).map(a => { const rows=submissions.filter(s=>s.assignmentId===a.id); const avg=rows.length?rows.reduce((sum,s)=>sum+Number(s.marks||0),0)/rows.length:0; return {...a,count:rows.length,avg}; });
+    const flaggedPriority = [...flagged].sort((a,b)=>(b.maxSimilarity||0)-(a.maxSimilarity||0)).slice(0,5);
 
     pgLayout({
         active: 'dashboard', role: 'instructor',
         title: 'Instructor Dashboard',
-        subtitle: 'Review every student submission, plagiarism score and instructor marking from one dashboard.',
+        subtitle: 'Create assignments, monitor submissions and review similarity evidence from one professional workspace.',
+        headerAction: `<div class="dashboard-head-actions"><a class="btn btn-secondary btn-sm" href="reports.html">Open reports</a><a class="btn btn-primary" href="assignments.html#new-assignment">＋ New assignment</a></div>`,
         content: `
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-title">Students</div><div class="stat-value">${students.length}</div><div class="stat-foot">Registered accounts</div></div>
-                <div class="stat-card"><div class="stat-title">Submissions</div><div class="stat-value">${submissions.length}</div><div class="stat-foot">All students</div></div>
-                <div class="stat-card"><div class="stat-title">Flagged</div><div class="stat-value">${flagged.length}</div><div class="stat-foot">Similarity ≥ threshold</div></div>
-                <div class="stat-card"><div class="stat-title">Avg. Marks</div><div class="stat-value">${average.toFixed(1)}</div><div class="stat-foot">Marked submissions</div></div>
+            <section class="dashboard-hero-card instructor-hero">
+                <div class="hero-glow hero-glow-one"></div><div class="hero-glow hero-glow-two"></div>
+                <div class="hero-copy"><span class="eyebrow">INSTRUCTOR WORKSPACE</span><h2>A clearer view of your class.</h2><p>Move from submission volume to review priorities without switching between pages.</p><div class="hero-pills"><span>✓ Pairwise comparison</span><span>✓ Marking workflow</span><span>✓ Assignment management</span></div></div>
+                <div class="review-orb" style="--progress:${reviewRate * 3.6}deg"><div><strong>${reviewRate}%</strong><span>reviewed</span></div></div>
+            </section>
+
+            <div class="stats-grid premium-stats">
+                <div class="stat-card stat-card-blue"><div class="stat-icon">◉</div><div class="stat-title">Students</div><div class="stat-value">${students.length}</div><div class="stat-foot">Registered learners</div></div>
+                <div class="stat-card stat-card-purple"><div class="stat-icon">▦</div><div class="stat-title">Assignments</div><div class="stat-value">${assignments.length}</div><div class="stat-foot">Published coursework</div></div>
+                <div class="stat-card stat-card-red"><div class="stat-icon">!</div><div class="stat-title">Flagged</div><div class="stat-value">${flagged.length}</div><div class="stat-foot">At or above review threshold</div></div>
+                <div class="stat-card stat-card-green"><div class="stat-icon">✓</div><div class="stat-title">Avg. Marks</div><div class="stat-value">${average.toFixed(1)}</div><div class="stat-foot">${marked.length} marked · ${pending} pending</div></div>
             </div>
 
-            <div class="dashboard-grid">
-                <section class="section-card">
-                    <div class="section-heading"><div><h2 class="section-title">Recent Student Submissions</h2><p class="text-muted">Open a row to view the text, similarity details and mark it.</p></div><a class="btn btn-secondary btn-sm" href="assignments.html">View all</a></div>
-                    <div class="table-responsive"><table class="data-table"><thead><tr><th>Student</th><th>Assignment</th><th>Submitted</th><th>Similarity</th><th>Marks</th><th>Action</th></tr></thead><tbody>
-                        ${submissions.slice(0, 8).map(s => {
-                            const a = assignments.find(item => item.id === s.assignmentId);
-                            return `<tr><td><strong>${PG.escapeHtml(s.studentName)}</strong><div class="table-sub">${PG.escapeHtml(PG.getUsers().find(u => u.id === s.studentId)?.studentId || '')}</div></td><td>${PG.escapeHtml(a?.title || 'Unknown')}</td><td>${PG.formatDate(s.submittedAt)}</td><td>${similarityBadge(s.maxSimilarity)}</td><td>${s.marks === null ? badge('Pending', 'review') : `<strong>${s.marks}/${a?.maxMarks ?? 10}</strong>`}</td><td><button class="btn btn-primary btn-sm review-btn" data-id="${s.id}">Review</button></td></tr>`;
-                        }).join('') || `<tr><td colspan="6">No student submissions yet. Students can create accounts and submit from their dashboard.</td></tr>`}
-                    </tbody></table></div>
+            <div class="analytics-grid instructor-analytics">
+                <section class="section-card analytics-card">
+                    <div class="section-heading"><div><span class="eyebrow">SIMILARITY PROFILE</span><h2 class="section-title">Submission similarity distribution</h2><p class="text-muted">Where your class is landing against the similarity scale.</p></div><a class="chart-chip" href="reports.html">View full report →</a></div>
+                    <div class="distribution-chart">
+                        ${similarityBands.map(b => `<div class="dist-row"><span>${b.label}</span><div class="dist-track"><i style="width:${Math.max(5, Math.round((b.count/maxBand)*100))}%"></i></div><strong>${b.count}</strong></div>`).join('')}
+                    </div>
                 </section>
-                <aside class="section-card"><h2 class="section-title">Similarity ranking</h2><p class="text-muted">Highest similarity is shown first for quick manual review.</p><div class="rank-list">${[...submissions].sort((a,b)=>b.maxSimilarity-a.maxSimilarity).slice(0,5).map((s,i)=>`<div class="rank-item"><div><span class="rank-number">${i+1}</span><strong>${PG.escapeHtml(s.studentName)}</strong><small>${PG.escapeHtml(assignments.find(a=>a.id===s.assignmentId)?.title || '')}</small></div><div>${similarityBadge(s.maxSimilarity)}</div></div>`).join('') || '<p class="text-muted">No submissions yet.</p>'}</div></aside>
+                <section class="section-card analytics-card">
+                    <div class="section-heading"><div><span class="eyebrow">REVIEW WORKLOAD</span><h2 class="section-title">Marking progress</h2><p class="text-muted">A quick view of review coverage.</p></div></div>
+                    <div class="review-progress-card"><div class="progress-ring-large purple" style="--progress:${reviewRate * 3.6}deg"><div><strong>${reviewRate}%</strong><span>complete</span></div></div><div class="review-stats"><div><strong>${marked.length}</strong><span>Marked</span></div><div><strong>${pending}</strong><span>Pending</span></div><div><strong>${flagged.length}</strong><span>Flagged</span></div></div></div>
+                </section>
             </div>
+
+            <div class="dashboard-grid premium-dashboard-grid">
+                <section class="section-card">
+                    <div class="section-heading"><div><span class="eyebrow">PRIORITY QUEUE</span><h2 class="section-title">Highest similarity cases</h2><p class="text-muted">Start with the submissions that need the closest review.</p></div><a class="btn btn-secondary btn-sm" href="reports.html">All reports</a></div>
+                    <div class="priority-list">
+                        ${flaggedPriority.length ? flaggedPriority.map((s,i)=>{const a=assignments.find(x=>x.id===s.assignmentId); return `<article class="priority-item"><div class="priority-rank">${i+1}</div><div class="priority-main"><strong>${PG.escapeHtml(s.studentName)}</strong><small>${PG.escapeHtml(a?.title||'Assignment')} · ${PG.formatDate(s.submittedAt)}</small></div><div class="priority-score"><strong>${Number(s.maxSimilarity||0).toFixed(1)}%</strong><span>similarity</span></div></article>`}).join('') : '<div class="empty-state"><div>✓</div><strong>No flagged submissions</strong><p>Nothing is currently above the review threshold.</p></div>'}
+                    </div>
+                </section>
+                <section class="section-card">
+                    <div class="section-heading"><div><span class="eyebrow">RECENT ACTIVITY</span><h2 class="section-title">Latest submissions</h2><p class="text-muted">Your most recent student activity.</p></div><a class="btn btn-secondary btn-sm" href="assignments.html">Manage</a></div>
+                    <div class="activity-list compact">
+                        ${recent.length ? recent.map(s=>{const a=assignments.find(x=>x.id===s.assignmentId); return `<article class="activity-item"><div class="activity-dot ${s.flagged?'dot-danger':'dot-safe'}"></div><div class="activity-main"><strong>${PG.escapeHtml(s.studentName)}</strong><small>${PG.escapeHtml(a?.title||'Assignment')} · ${PG.formatDate(s.submittedAt)}</small></div><div>${s.marks===null||s.marks===undefined?badge('Pending','review'):`<strong>${s.marks}/${a?.maxMarks??10}</strong>`}</div></article>`}).join('') : '<div class="empty-state"><div>◎</div><strong>No submissions yet</strong><p>Published assignments will appear here as students submit.</p></div>'}
+                    </div>
+                </section>
+            </div>
+
+            <section class="section-card">
+                <div class="section-heading"><div><span class="eyebrow">ASSIGNMENT HEALTH</span><h2 class="section-title">Coursework snapshot</h2><p class="text-muted">Submission volume and average marks by assignment.</p></div><a class="btn btn-secondary btn-sm" href="assignments.html">Manage assignments</a></div>
+                <div class="assignment-health-grid">${assignmentStats.map(a=>`<article class="health-card"><div class="health-top"><div><strong>${PG.escapeHtml(a.title)}</strong><small>${PG.escapeHtml(a.course)}</small></div><span>${a.count} submitted</span></div><div class="health-bar"><span style="width:${Math.min(100, assignments.length ? (a.count/Math.max(1,students.length))*100 : 0)}%"></span></div><div class="health-meta"><span>Avg. marks</span><strong>${a.count ? a.avg.toFixed(1) : '—'}${a.count ? ` / ${a.maxMarks}` : ''}</strong></div></article>`).join('')}</div>
+            </section>
         `
-    });
-
-    document.querySelectorAll('.review-btn').forEach(button => button.addEventListener('click', () => openReviewModal(button.dataset.id)));
-}
-
-function openReviewModal(id) {
-    const submission = PG.getSubmissions().find(s => s.id === id);
-    if (!submission) return;
-    const assignment = PG.getAssignments().find(a => a.id === submission.assignmentId);
-    const modal = document.createElement('div');
-    modal.className = 'modal-backdrop';
-    modal.innerHTML = `
-        <div class="modal-card">
-            <button class="modal-close" aria-label="Close">×</button>
-            <div class="modal-header"><div><span class="eyebrow">MARKING</span><h2>${PG.escapeHtml(assignment?.title || 'Submission')}</h2><p class="text-muted">${PG.escapeHtml(submission.studentName)} · ${PG.formatDate(submission.submittedAt)}</p></div><div>${similarityBadge(submission.maxSimilarity)}</div></div>
-            <div class="review-grid">
-                <div><h3>Student submission</h3><pre class="submission-preview">${PG.escapeHtml(submission.text)}</pre></div>
-                <div><h3>Instructor marking</h3><form id="mark-form" class="stack-form"><div class="form-group"><label class="form-label">Marks / ${assignment?.maxMarks ?? 10}</label><input class="form-input" id="marks" type="number" min="0" max="${assignment?.maxMarks ?? 10}" step="0.5" value="${submission.marks ?? ''}" required></div><div class="form-group"><label class="form-label">Status</label><select class="form-input" id="status"><option ${submission.status === 'Marked' ? 'selected' : ''}>Marked</option><option ${submission.status === 'Needs Revision' ? 'selected' : ''}>Needs Revision</option><option ${submission.status === 'Approved' ? 'selected' : ''}>Approved</option></select></div><div class="form-group"><label class="form-label">Feedback</label><textarea class="form-textarea" id="feedback" rows="5" placeholder="Write feedback for the student...">${PG.escapeHtml(submission.feedback)}</textarea></div><div id="mark-error" class="auth-error"></div><button class="btn btn-primary" type="submit">Save Mark</button></form></div>
-            </div>
-            ${submission.matchingNgrams?.length ? `<div class="match-panel"><strong>Matching n-grams</strong><div class="ngram-list">${submission.matchingNgrams.map(g => `<span class="ngram-tag">${PG.escapeHtml(g)}</span>`).join('')}</div>${submission.topMatchStudent ? `<p class="text-muted">Top match: ${PG.escapeHtml(submission.topMatchStudent)}</p>` : ''}</div>` : ''}
-        </div>`;
-    document.body.appendChild(modal);
-    modal.querySelector('.modal-close').addEventListener('click', () => modal.remove());
-    modal.addEventListener('click', event => { if (event.target === modal) modal.remove(); });
-    modal.querySelector('#mark-form').addEventListener('submit', event => {
-        event.preventDefault();
-        const error = modal.querySelector('#mark-error');
-        try {
-            const marks = Number(modal.querySelector('#marks').value);
-            if (marks < 0 || marks > (assignment?.maxMarks ?? 10)) throw new Error('Marks must be inside the assignment range.');
-            PG.markSubmission(id, marks, modal.querySelector('#feedback').value, modal.querySelector('#status').value);
-            modal.remove();
-            showToast('Mark saved successfully.', 'success');
-            renderInstructorDashboard();
-        } catch (e) { error.textContent = e.message; }
     });
 }
 

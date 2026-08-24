@@ -1,19 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Student Results — PlagiGuard</title>
-    <link rel="stylesheet" href="../css/base.css">
-    <link rel="stylesheet" href="../css/components.css">
-    <link rel="stylesheet" href="../css/phase1.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>My Results — PlagiGuard</title>
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/plagiguard.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
 </head>
-
 <body>
-    <script src="../js/app.js"></script>
-    <script src="../js/ui.js"></script>
-    <script>const u = PG.requireRole('student'); if (u) { const s = PG.getStudentSubmissions(u.id); pgLayout({ active: 'assignments', role: 'student', title: 'My Results', subtitle: 'Similarity and marks for your submitted work.', content: `<section class="section-card"><div class="table-responsive"><table class="data-table"><thead><tr><th>Assignment</th><th>Similarity</th><th>Marks</th><th>Feedback</th></tr></thead><tbody>${s.map(x => `<tr><td>${PG.escapeHtml(PG.getAssignments().find(a => a.id === x.assignmentId)?.title || '')}</td><td>${similarityBadge(x.maxSimilarity)}</td><td>${x.marks ?? 'Pending'}</td><td>${PG.escapeHtml(x.feedback || '—')}</td></tr>`).join('') || '<tr><td colspan="4">No results yet.</td></tr>'}</tbody></table></div></section>` }); }</script>
-</body>
+<script src="../js/app.js"></script>
+<script src="../js/ui.js"></script>
+<script>
+const student = PG.requireRole('student');
+if (student) {
+  function statusHtml(submission) {
+    if (submission.flagged) return '<span class="report-status flagged"><span class="status-dot"></span>Flagged for review</span>';
+    if (submission.topMatchStudent) return '<span class="report-status clear"><span class="status-dot"></span>Below review threshold</span>';
+    return '<span class="report-status pending"><span class="status-dot"></span>Awaiting comparison</span>';
+  }
 
+  function scoreClass(value) {
+    return value >= PG.getSettings().similarityThreshold ? 'danger' : value >= PG.getSettings().similarityThreshold / 2 ? 'watch' : 'safe';
+  }
+
+  function reportModal(submission) {
+    const assignment = PG.getAssignments().find(a => a.id === submission.assignmentId);
+    const all = PG.getSubmissions();
+    const match = submission.topMatchSubmissionId ? all.find(s => s.id === submission.topMatchSubmissionId) : null;
+    const sim = Number(submission.maxSimilarity) || 0;
+    const score = Math.min(100, Math.max(0, sim));
+    const settings = PG.getSettings();
+    const tone = scoreClass(sim);
+    const ngrams = submission.matchingNgrams || [];
+    const matched = ngrams.length;
+    const uniqueStudentCount = new Set(all.map(s => s.studentId)).size;
+    const wordCount = Number(submission.wordCount) || PG.tokenize(submission.text).length;
+    const reportId = `PG-${String(submission.id).slice(-8).toUpperCase()}`;
+    const modal = document.createElement('div');
+    modal.className = 'report-modal-backdrop';
+    modal.innerHTML = `
+      <div class="report-modal" role="dialog" aria-modal="true" aria-label="Similarity report">
+        <div class="report-modal-topbar">
+          <div class="report-brand"><span class="brand-icon">🛡️</span><div><strong>PlagiGuard Similarity Report</strong><small>${reportId}</small></div></div>
+          <div class="report-modal-actions"><button class="btn btn-secondary btn-sm" id="print-report">Save / Print PDF</button><button class="report-close" aria-label="Close report">×</button></div>
+        </div>
+
+        <div class="report-modal-body">
+          <section class="report-cover">
+            <div class="report-cover-main">
+              <span class="eyebrow">SIMILARITY REPORT</span>
+              <h2>${PG.escapeHtml(assignment?.title || 'Submitted assignment')}</h2>
+              <p>${PG.escapeHtml(assignment?.course || 'Course')} · ${PG.escapeHtml(student.name)} · ${PG.formatDate(submission.submittedAt)}</p>
+            </div>
+            <div class="report-score-ring ${tone}" style="--report-score:${score * 3.6}deg"><div><strong>${sim.toFixed(1)}%</strong><span>similarity</span></div></div>
+          </section>
+
+          <section class="report-alert ${submission.flagged ? 'alert-danger' : submission.topMatchStudent ? 'alert-safe' : 'alert-pending'}">
+            <div class="report-alert-icon">${submission.flagged ? '!' : submission.topMatchStudent ? '✓' : '•'}</div>
+            <div><strong>${submission.flagged ? 'Review recommended' : submission.topMatchStudent ? 'No similarity flag raised' : 'Comparison is not available yet'}</strong><p>${submission.flagged ? `This result is at or above the ${settings.similarityThreshold}% instructor threshold. Similarity is a review signal, not a final plagiarism decision.` : submission.topMatchStudent ? `Your highest recorded similarity is below the ${settings.similarityThreshold}% review threshold.` : 'Another student submission is required before a pairwise comparison can be calculated.'}</p></div>
+          </section>
+
+          <div class="report-stat-grid">
+            <div class="report-stat"><span>Word count</span><strong>${wordCount.toLocaleString()}</strong><small>Minimum ${settings.minimumWords}</small></div>
+            <div class="report-stat"><span>Top match</span><strong>${submission.topMatchStudent ? PG.escapeHtml(submission.topMatchStudent) : '—'}</strong><small>${match ? PG.escapeHtml(PG.getAssignments().find(a => a.id === match.assignmentId)?.title || 'Other submission') : 'No paired result'}</small></div>
+            <div class="report-stat"><span>Matching n-grams</span><strong>${matched}</strong><small>${settings.ngramSize}-word phrases shared</small></div>
+            <div class="report-stat"><span>Compared students</span><strong>${uniqueStudentCount}</strong><small>Across saved submissions</small></div>
+          </div>
+
+          <section class="report-section">
+            <div class="report-section-heading"><div><span class="eyebrow">MATCH OVERVIEW</span><h3>What contributed to the score?</h3></div><span class="report-method">${settings.ngramSize}-gram · Jaccard</span></div>
+            <div class="report-meter"><div class="report-meter-track"><span class="${tone}" style="width:${score}%"></span></div><div class="report-meter-labels"><span>0% low overlap</span><strong>${sim.toFixed(1)}%</strong><span>${settings.similarityThreshold}% review threshold</span></div></div>
+          </section>
+
+          <section class="report-section">
+            <div class="report-section-heading"><div><span class="eyebrow">MATCHING TEXT</span><h3>Shared n-grams identified</h3></div><small>${matched ? 'Top shared phrases are shown below.' : 'No shared n-grams available.'}</small></div>
+            ${matched ? `<div class="report-match-grid">${ngrams.slice(0,18).map((g,i) => `<article class="report-match-card"><div class="match-index">${String(i+1).padStart(2,'0')}</div><div><strong>${PG.escapeHtml(g)}</strong><small>Shared ${settings.ngramSize}-gram phrase</small></div></article>`).join('')}</div>` : '<div class="report-empty-inline">No overlapping phrases were found in the available comparison data.</div>'}
+          </section>
+
+          <section class="report-section report-two-column">
+            <div><span class="eyebrow">SUBMISSION DETAILS</span><h3>Submission information</h3><dl class="report-detail-list"><div><dt>File</dt><dd>${PG.escapeHtml(submission.filename || 'typed-submission.txt')}</dd></div><div><dt>Submitted</dt><dd>${PG.escapeHtml(PG.formatDate(submission.submittedAt))}</dd></div><div><dt>Assignment</dt><dd>${PG.escapeHtml(assignment?.title || '—')}</dd></div><div><dt>Status</dt><dd>${PG.escapeHtml(submission.status || 'Submitted')}</dd></div></dl></div>
+            <div><span class="eyebrow">HOW THIS SCORE IS BUILT</span><h3>Transparent method</h3><ol class="report-method-list"><li><span>1</span><div><strong>Tokenize</strong><small>Text is normalized and split into words.</small></div></li><li><span>2</span><div><strong>Generate n-grams</strong><small>Consecutive word groups are created using the selected size.</small></div></li><li><span>3</span><div><strong>Jaccard similarity</strong><small>Shared phrase sets are compared using intersection ÷ union.</small></div></li></ol></div>
+          </section>
+
+          <section class="report-disclaimer"><strong>Academic review note</strong><p>A similarity score identifies overlapping wording between saved submissions. It does not by itself establish plagiarism, intent, or misconduct. Your instructor reviews the evidence and assigns the final academic outcome.</p></section>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    const close = () => { modal.remove(); document.body.classList.remove('report-modal-open'); };
+    document.body.classList.add('report-modal-open');
+    modal.querySelector('.report-close').addEventListener('click', close);
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    modal.querySelector('#print-report').addEventListener('click', () => window.print());
+  }
+
+  const submissions = PG.getStudentSubmissions(student.id).sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+  const settings = PG.getSettings();
+  const flagged = submissions.filter(s => s.flagged).length;
+  const compared = submissions.filter(s => s.topMatchStudent).length;
+  const avg = compared ? submissions.filter(s=>s.topMatchStudent).reduce((sum,s)=>sum+(Number(s.maxSimilarity)||0),0)/compared : 0;
+  const best = [...submissions].sort((a,b)=>(Number(b.maxSimilarity)||0)-(Number(a.maxSimilarity)||0))[0];
+
+  pgLayout({
+    active:'results', role:'student', title:'Similarity Reports',
+    subtitle:'Review your submission status, similarity evidence, marking and feedback in one place.',
+    content:`
+      <div class="report-command-bar">
+        <div><span class="eyebrow">REPORT CENTER</span><strong>${submissions.length} report${submissions.length===1?'':'s'} available</strong><span class="text-muted">Your report data is generated locally from saved submissions.</span></div>
+        <div class="report-command-meta"><span class="mini-method">${settings.ngramSize}-gram</span><span class="mini-method">${settings.similarityThreshold}% threshold</span><a class="btn btn-secondary btn-sm" href="upload.html">＋ New submission</a></div>
+      </div>
+      <section class="report-stat-grid report-stat-grid-top">
+        <div class="report-stat report-stat-primary"><span>Average similarity</span><strong>${compared ? avg.toFixed(1)+'%' : '—'}</strong><small>${compared ? 'Across compared submissions' : 'Waiting for comparison'}</small></div>
+        <div class="report-stat"><span>Flagged for review</span><strong>${flagged}</strong><small>${flagged ? `At or above ${settings.similarityThreshold}%` : 'No current flags'}</small></div>
+        <div class="report-stat"><span>Highest match</span><strong>${best && best.topMatchStudent ? (Number(best.maxSimilarity)||0).toFixed(1)+'%' : '—'}</strong><small>${best?.topMatchStudent ? PG.escapeHtml(best.topMatchStudent) : 'No paired result'}</small></div>
+        <div class="report-stat"><span>Reviewed</span><strong>${submissions.filter(s=>s.marks!==null).length}/${submissions.length}</strong><small>Assignments marked</small></div>
+      </section>
+      <section class="section-card report-inbox-card">
+        <div class="report-inbox-head"><div><span class="eyebrow">YOUR REPORTS</span><h2 class="section-title">Submission history</h2><p class="text-muted">Open any report for the full similarity breakdown.</p></div><div class="report-tools"><input id="student-report-search" class="form-input search-input" type="search" placeholder="Search reports..." aria-label="Search reports"><div class="report-filter-tabs"><button class="active" data-report-filter="all">All</button><button data-report-filter="flagged">Flagged</button><button data-report-filter="clear">Not flagged</button></div></div>
+        <div id="student-report-list" class="student-report-list">
+        ${submissions.map(s=>{
+          const a=PG.getAssignments().find(v=>v.id===s.assignmentId);
+          const sim=Number(s.maxSimilarity)||0;
+          const tone=scoreClass(sim);
+          const filter=s.flagged?'flagged':s.topMatchStudent?'clear':'pending';
+          return `<article class="professional-report-card" data-report-status="${filter}" data-report-search="${PG.escapeHtml(`${a?.title || ''} ${a?.course || ''} ${s.studentName}`.toLowerCase())}">
+            <div class="professional-report-accent ${tone}"></div>
+            <div class="professional-report-main">
+              <div class="professional-report-title"><div><span class="eyebrow">${PG.escapeHtml(a?.course||'ASSIGNMENT')}</span><h3>${PG.escapeHtml(a?.title||'Untitled assignment')}</h3><p>${PG.escapeHtml(s.wordCount||0)} words · Submitted ${PG.escapeHtml(PG.formatDate(s.submittedAt))}</p></div>${statusHtml(s)}</div>
+              <div class="professional-report-metrics"><div><span>Similarity</span><strong class="score-${tone}">${sim.toFixed(1)}%</strong><div class="report-meter-track compact"><span class="${tone}" style="width:${Math.min(sim,100)}%"></span></div></div><div><span>Highest match</span><strong>${s.topMatchStudent?PG.escapeHtml(s.topMatchStudent):'—'}</strong><small>${s.matchingNgrams?.length||0} shared n-grams</small></div><div><span>Marks</span><strong>${s.marks!==null&&s.marks!==undefined?s.marks+'/'+(a?.maxMarks??10):'Pending'}</strong><small>${s.feedback?PG.escapeHtml(s.feedback):'Instructor feedback pending'}</small></div></div>
+            </div>
+            <div class="professional-report-actions"><button class="btn btn-primary report-open-btn" data-id="${s.id}">View full report</button><span class="report-file">${PG.escapeHtml(s.filename||'typed submission')}</span></div>
+          </article>`;
+        }).join('') || `<div class="result-empty"><div class="empty-icon">◌</div><h3>No reports yet</h3><p>Submit your first assignment to generate a similarity report.</p><a class="btn btn-primary" href="upload.html">Submit work</a></div>`}
+        </div>
+      </section>`
+  });
+
+  document.querySelectorAll('.report-open-btn').forEach(btn => btn.addEventListener('click', () => {
+    const s = PG.getSubmissions().find(x => x.id === btn.dataset.id);
+    if (s) reportModal(s);
+  }));
+  document.querySelectorAll('[data-report-filter]').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-report-filter]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const filter = btn.dataset.reportFilter;
+    document.querySelectorAll('.professional-report-card').forEach(card => {
+      card.hidden = filter !== 'all' && card.dataset.reportStatus !== filter;
+    });
+  }));
+}
+
+const studentReportSearch = document.getElementById('student-report-search');
+studentReportSearch?.addEventListener('input', () => { const q = studentReportSearch.value.trim().toLowerCase(); document.querySelectorAll('#student-report-list .professional-report-card').forEach(card => { card.hidden = !!q && !card.dataset.reportSearch.includes(q); }); });
+</script>
+</body>
 </html>
