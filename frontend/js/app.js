@@ -387,10 +387,24 @@ const PG = (() => {
         return submissions[index];
     }
 
-    function getInitialPage() {
-        const user = getCurrentUser();
-        return user ? (user.role === 'student' ? 'student/dashboard.html' : 'instructor/dashboard.html') : 'index.html';
+ function getInitialPage() {
+    const user = getCurrentUser();
+    const base = '/PlagiGuard/frontend';
+
+    if (!user) {
+        return `${base}/html/index.html`;
     }
+
+    if (user.role === 'student') {
+        return `${base}/student/dashboard.html`;
+    }
+
+    if (user.role === 'instructor') {
+        return `${base}/instructor/dashboard.html`;
+    }
+
+    return `${base}/html/index.html`;
+}
 
     init();
 

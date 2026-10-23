@@ -17,13 +17,20 @@ if (toggle) {
 form.addEventListener('submit', event => {
     event.preventDefault();
     errorBox.textContent = '';
+
     try {
-        const user = PG.login(document.getElementById('email').value, document.getElementById('password').value);
-        const next = new URLSearchParams(window.location.search).get('next');
-        if (next && (user.role === 'student' && next.includes('/student/') || user.role === 'instructor' && next.includes('/instructor/'))) {
-            window.location.href = next;
+        const user = PG.login(
+            document.getElementById('email').value,
+            document.getElementById('password').value
+        );
+        window.location.href = PG.getInitialPage();
+       
+        if (user.role === 'student') {
+            window.location.href = '../student/dashboard.html';
+        } else if (user.role === 'instructor') {
+            window.location.href = '../instructor/dashboard.html';
         } else {
-            window.location.href = PG.getInitialPage();
+            errorBox.textContent = 'Unknown user role.';
         }
     } catch (error) {
         errorBox.textContent = error.message;
