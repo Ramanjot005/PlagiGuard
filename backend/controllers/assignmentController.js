@@ -1,8 +1,4 @@
-
 const mongoose = require("mongoose");
-
-// Import the model that Person 3 will create.
-// We will connect this file once Assignment.js is available.
 const Assignment = require("../models/Assignment");
 
 // GET /api/assignments
@@ -31,7 +27,7 @@ const getAssignments = async (req, res) => {
 // Create an assignment
 const createAssignment = async (req, res) => {
   try {
-    const { title, description, dueDate, maxMarks } = req.body;
+    const { title, course, description, dueDate, maxMarks } = req.body;
 
     if (
       typeof title !== "string" ||
@@ -40,6 +36,16 @@ const createAssignment = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Assignment title is required"
+      });
+    }
+
+    if (
+      typeof course !== "string" ||
+      !course.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Course name is required"
       });
     }
 
@@ -65,6 +71,7 @@ const createAssignment = async (req, res) => {
 
     const assignment = await Assignment.create({
       title: title.trim(),
+      course: course.trim(),
       description:
         typeof description === "string"
           ? description.trim()
@@ -104,6 +111,7 @@ const updateAssignment = async (req, res) => {
 
     const allowedFields = [
       "title",
+      "course",
       "description",
       "dueDate",
       "maxMarks"
@@ -139,6 +147,23 @@ const updateAssignment = async (req, res) => {
 
     if (updates.title !== undefined) {
       updates.title = updates.title.trim();
+    }
+
+    if (
+      updates.course !== undefined &&
+      (
+        typeof updates.course !== "string" ||
+        !updates.course.trim()
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Course name cannot be empty"
+      });
+    }
+
+    if (updates.course !== undefined) {
+      updates.course = updates.course.trim();
     }
 
     if (

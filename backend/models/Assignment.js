@@ -1,9 +1,14 @@
-
 const mongoose = require("mongoose");
 
 const assignmentSchema = new mongoose.Schema(
   {
     title: {
+      type: String,
+      required: true,
+      trim: true
+    },
+
+    course: {
       type: String,
       required: true,
       trim: true
