@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const assignmentSchema = new mongoose.Schema(
@@ -34,6 +33,12 @@ const assignmentSchema = new mongoose.Schema(
       required: true,
       trim: true
 >>>>>>> 35ecd537aad34605bf47727195fcfbd8c82b8442
+    },
+
+    course: {
+      type: String,
+      required: true,
+      trim: true
     },
 
     description: {
