@@ -1,30 +1,25 @@
+
 const form = document.getElementById('login-form');
 const errorBox = document.getElementById('auth-error');
-const toggle = document.querySelector('.toggle-password');
 
 if (PG.getCurrentUser()) {
     window.location.href = PG.getInitialPage();
 }
 
-if (toggle) {
-    toggle.addEventListener('click', () => {
-        const input = document.getElementById('password');
-        input.type = input.type === 'password' ? 'text' : 'password';
-        toggle.textContent = input.type === 'password' ? 'Show' : 'Hide';
-    });
-}
-
-form.addEventListener('submit', event => {
+form.addEventListener('submit', async event => {
     event.preventDefault();
     errorBox.textContent = '';
 
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+
     try {
-        const user = PG.login(
-            document.getElementById('email').value,
+        // Log in through the backend, not browser localStorage.
+        const user = await PG.loginWithBackend(
+            document.getElementById('email').value.trim(),
             document.getElementById('password').value
         );
-        window.location.href = PG.getInitialPage();
-       
+
         if (user.role === 'student') {
             window.location.href = '../student/dashboard.html';
         } else if (user.role === 'instructor') {
@@ -33,6 +28,9 @@ form.addEventListener('submit', event => {
             errorBox.textContent = 'Unknown user role.';
         }
     } catch (error) {
-        errorBox.textContent = error.message;
+        errorBox.textContent =
+            error.message || 'Unable to log in. Please try again.';
+    } finally {
+        if (submitButton) submitButton.disabled = false;
     }
 });
