@@ -3,7 +3,6 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-
 const connectDB = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
@@ -18,13 +17,11 @@ const {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ==================== MIDDLEWARE ====================
-
+// Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
 
-// ==================== HEALTH CHECK ====================
-
+// Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -32,29 +29,12 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ==================== AUTHENTICATION ROUTES ====================
-
-// POST /api/auth/register
-// POST /api/auth/login
+// API routes
 app.use("/api/auth", authRoutes);
-
-// ==================== ASSIGNMENT ROUTES ====================
-
-// GET    /api/assignments
-// POST   /api/assignments
-// PUT    /api/assignments/:id
 app.use("/api/assignments", assignmentRoutes);
-
-// ==================== SUBMISSION ROUTES ====================
-
-// POST  /api/submissions
-// GET   /api/submissions/my
-// GET   /api/submissions/reports
-// PATCH /api/submissions/:id/grade
 app.use("/api/submissions", submissionRoutes);
 
-// ==================== PROTECTED TEST ROUTE ====================
-
+// Protected test route
 app.get("/api/protected", protect, (req, res) => {
   res.status(200).json({
     success: true,
@@ -63,8 +43,7 @@ app.get("/api/protected", protect, (req, res) => {
   });
 });
 
-// ==================== STUDENT-ONLY TEST ROUTE ====================
-
+// Student-only test route
 app.get(
   "/api/student/dashboard",
   protect,
@@ -78,8 +57,7 @@ app.get(
   }
 );
 
-// ==================== INSTRUCTOR-ONLY TEST ROUTE ====================
-
+// Instructor-only test route
 app.get(
   "/api/instructor/dashboard",
   protect,
@@ -93,8 +71,7 @@ app.get(
   }
 );
 
-// ==================== UNKNOWN ROUTES ====================
-
+// Unknown routes
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -102,9 +79,8 @@ app.use((req, res) => {
   });
 });
 
-// ==================== START SERVER ====================
-
-const startServer = async () => {
+// Start server after connecting to MongoDB
+async function startServer() {
   try {
     await connectDB();
 
@@ -114,9 +90,9 @@ const startServer = async () => {
       );
     });
   } catch (error) {
-    console.error("Failed to start backend:", error.message);
+    console.error("Server startup failed:", error.message);
     process.exit(1);
   }
-};
+}
 
 startServer();

@@ -15,6 +15,12 @@ const assignmentSchema = new mongoose.Schema(
       trim: true
     },
 
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+
     dueDate: {
       type: Date,
       default: null
@@ -24,12 +30,6 @@ const assignmentSchema = new mongoose.Schema(
       type: Number,
       default: 100,
       min: 1
-    },
-
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
     }
   },
   {

@@ -3,65 +3,177 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Sign in to your PlagiGuard workspace.">
     <title>Login — PlagiGuard</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/plagiguard.css">
+
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/plagiguard.css">
 </head>
 
 <body>
     <div id="page-nav"></div>
+
     <main class="auth-page auth-page-pro">
         <div class="auth-shell auth-shell-pro">
+
             <section class="auth-visual auth-visual-pro">
                 <div>
-                    <div class="auth-brandline"><span class="brand-icon">🛡️</span>PlagiGuard</div><span
-                        class="auth-eyebrow">ACADEMIC INTEGRITY WORKSPACE</span>
-                    <h2>Check your work. Understand the result. Submit with confidence.</h2>
-                    <p>One calm workspace for students, researchers and instructors — with transparent browser-side
-                        similarity analysis and human review.</p>
-                    <div class="auth-proof-grid">
-                        <div><strong>Tokenization</strong><span>Normalize text consistently</span></div>
-                        <div><strong>N-grams</strong><span>Find repeated phrasing</span></div>
-                        <div><strong>Jaccard</strong><span>Measure shared language</span></div>
-                        <div><strong>Review</strong><span>Keep context in the loop</span></div>
+                    <div class="auth-brandline">
+                        <span class="brand-icon">🛡️</span> PlagiGuard
                     </div>
-                </div><img class="auth-showcase-image" src="assets/plagiguard-auth.jpg"
+
+                    <span class="auth-eyebrow">
+                        ACADEMIC INTEGRITY WORKSPACE
+                    </span>
+
+                    <h2>Check your work. Understand the result. Submit with confidence.</h2>
+
+                    <p>
+                        One calm workspace for students, researchers and instructors
+                        — with transparent browser-side similarity analysis and human review.
+                    </p>
+
+                    <div class="auth-proof-grid">
+                        <div>
+                            <strong>Tokenization</strong>
+                            <span>Normalize text consistently</span>
+                        </div>
+
+                        <div>
+                            <strong>N-grams</strong>
+                            <span>Find repeated phrasing</span>
+                        </div>
+
+                        <div>
+                            <strong>Jaccard</strong>
+                            <span>Measure shared language</span>
+                        </div>
+
+                        <div>
+                            <strong>Review</strong>
+                            <span>Keep context in the loop</span>
+                        </div>
+                    </div>
+                </div>
+
+                <img
+                    class="auth-showcase-image"
+                    src="../assets/plagiguard-auth.jpg"
                     alt="PlagiGuard academic integrity workspace preview">
             </section>
+
             <section class="auth-form-panel auth-form-panel-pro">
-                <div class="auth-logo"><span class="eyebrow">WELCOME BACK</span>
+                <div class="auth-logo">
+                    <span class="eyebrow">WELCOME BACK</span>
                     <h1>Sign in to your workspace</h1>
-                    <p class="text-muted">Use your registered account to continue.</p>
+                    <p class="text-muted">
+                        Use your registered account to continue.
+                    </p>
                 </div>
+
                 <form id="login-form">
-                    <div class="form-group"><label class="form-label" for="email">Email address</label><input
-                            class="form-input" type="email" id="email" autocomplete="email" required
-                            placeholder="you@university.edu"></div>
                     <div class="form-group">
-                        <div class="label-row"><label class="form-label" for="password">Password</label><a
-                                class="small-link" href="#" onclick="return false">Need help?</a></div>
-                        <div class="password-wrap"><input class="form-input" type="password" id="password"
-                                autocomplete="current-password" required placeholder="Enter your password"><button
-                                type="button" class="password-toggle" id="password-toggle">Show</button></div>
+                        <label class="form-label" for="email">Email address</label>
+                        <input
+                            class="form-input"
+                            type="email"
+                            id="email"
+                            autocomplete="email"
+                            required
+                            placeholder="you@university.edu">
                     </div>
-                    <div class="auth-inline"><label><input type="checkbox" id="remember"> <span>Remember this
-                                device</span></label><span>Secure browser session</span></div>
-                    <div class="auth-error" id="auth-error"></div><button class="btn btn-primary auth-submit"
-                        type="submit">Sign in <span>→</span></button>
+
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label class="form-label" for="password">Password</label>
+                            <a class="small-link" href="#" id="password-help">Need help?</a>
+                        </div>
+
+                        <div class="password-wrap">
+                            <input
+                                class="form-input"
+                                type="password"
+                                id="password"
+                                autocomplete="current-password"
+                                required
+                                placeholder="Enter your password">
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="password-toggle">
+                                Show
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="auth-inline">
+                        <label>
+                            <input type="checkbox" id="remember">
+                            <span>Remember this device</span>
+                        </label>
+                        <span>Secure browser session</span>
+                    </div>
+
+                    <div
+                        class="auth-error"
+                        id="auth-error"
+                        role="alert"
+                        aria-live="polite"></div>
+
+                    <button class="btn btn-primary auth-submit" type="submit">
+                        Sign in <span>→</span>
+                    </button>
                 </form>
-                
-                <p class="auth-switch">New to PlagiGuard? <a href="signup.html">Create your account</a></p>
+
+                <p class="auth-switch">
+                    New to PlagiGuard?
+                    <a href="signup.html">Create your account</a>
+                </p>
             </section>
+
         </div>
     </main>
+
     <div id="page-footer"></div>
-    <script src="js/app.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/pages/login.js"></script>
-    <script>document.getElementById('page-nav').innerHTML = pgNav(''); document.getElementById('page-footer').innerHTML = pgFooter(); document.getElementById('theme-toggle')?.addEventListener('click', pgToggleTheme); bindLogout(); bindNavMenu(); bindNavDropdowns(); document.getElementById('password-toggle')?.addEventListener('click', () => { const p = document.getElementById('password'); const b = document.getElementById('password-toggle'); p.type = p.type === 'password' ? 'text' : 'password'; b.textContent = p.type === 'password' ? 'Show' : 'Hide'; });</script>
+
+    <script src="../js/app.js"></script>
+    <script src="../js/ui.js"></script>
+    <script src="../js/pages/login.js"></script>
+
+    <script>
+        // Render navigation and footer.
+        document.getElementById('page-nav').innerHTML = pgNav('');
+        document.getElementById('page-footer').innerHTML = pgFooter();
+
+        // Navigation controls.
+        document.getElementById('theme-toggle')
+            ?.addEventListener('click', pgToggleTheme);
+
+        bindLogout();
+        bindNavMenu();
+        bindNavDropdowns();
+
+        // Show or hide the password.
+        document.getElementById('password-toggle')
+            ?.addEventListener('click', function () {
+                const password = document.getElementById('password');
+                const button = this;
+
+                const isHidden = password.type === 'password';
+
+                password.type = isHidden ? 'text' : 'password';
+                button.textContent = isHidden ? 'Hide' : 'Show';
+            });
+
+        // Keep the help link from jumping to the top.
+        document.getElementById('password-help')
+            ?.addEventListener('click', function (event) {
+                event.preventDefault();
+            });
+    </script>
 </body>
 
 </html>
