@@ -20,9 +20,17 @@ const assignmentSchema = new mongoose.Schema(
         dueDate: {
             type: Date,
             default: null
+        },
+        maxMarks: {
+            type: Number,
+            default: 10,
+            min: 1
         }
     },
     { timestamps: true }
 );
+
+assignmentSchema.index({ createdBy: 1, createdAt: -1 });
+assignmentSchema.index({ dueDate: 1 });
 
 module.exports = mongoose.model("Assignment", assignmentSchema);

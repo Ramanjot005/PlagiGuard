@@ -10,12 +10,17 @@ const router = express.Router();
 // Create an assignment
 router.post("/", async (req, res) => {
     try {
-        const { title, description, createdBy, dueDate } = req.body;
+        const { title, description, createdBy, dueDate, maxMarks } = req.body;
 
-        if (!title || !mongoose.isValidObjectId(createdBy)) {
+        if (
+            !title ||
+            !mongoose.isValidObjectId(createdBy) ||
+            (maxMarks !== undefined &&
+                (!Number.isFinite(maxMarks) || maxMarks < 1))
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Valid title and createdBy are required"
+                message: "Valid title, instructor, and maximum marks are required"
             });
         }
 
@@ -32,6 +37,7 @@ router.post("/", async (req, res) => {
             title,
             description,
             createdBy,
+            ...(maxMarks !== undefined ? { maxMarks } : {}),
             ...(dueDate ? { dueDate } : {})
         });
 

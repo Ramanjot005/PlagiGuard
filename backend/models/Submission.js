@@ -25,6 +25,24 @@ const submissionSchema = new mongoose.Schema(
             type: Number,
             default: 0
         },
+        submittedAt: {
+            type: Date,
+            default: Date.now
+        },
+        marks: {
+            type: Number,
+            default: null,
+            min: 0
+        },
+        feedback: {
+            type: String,
+            default: "",
+            trim: true
+        },
+        markedAt: {
+            type: Date,
+            default: null
+        },
         maxSimilarity: {
             type: Number,
             default: 0
@@ -65,5 +83,9 @@ const submissionSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
+
+submissionSchema.index({ assignment: 1, submittedAt: -1 });
+submissionSchema.index({ student: 1, submittedAt: -1 });
+submissionSchema.index({ flagged: 1, maxSimilarity: -1 });
 
 module.exports = mongoose.model("Submission", submissionSchema);

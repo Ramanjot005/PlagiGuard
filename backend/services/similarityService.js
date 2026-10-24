@@ -42,13 +42,28 @@ async function getAnalysisSettings() {
         key: "global"
     }).lean();
 
-    return {
+    const analysisSettings = {
         ngramSize: settings?.ngramSize ?? 3,
         similarityThreshold:
             settings?.similarityThreshold ?? 30,
         minimumMatchingNGrams:
             settings?.minimumMatchingNGrams ?? 3
     };
+
+    if (
+        !Number.isInteger(analysisSettings.ngramSize) ||
+        analysisSettings.ngramSize < 1 ||
+        analysisSettings.ngramSize > 10 ||
+        !Number.isFinite(analysisSettings.similarityThreshold) ||
+        analysisSettings.similarityThreshold < 0 ||
+        analysisSettings.similarityThreshold > 100 ||
+        !Number.isInteger(analysisSettings.minimumMatchingNGrams) ||
+        analysisSettings.minimumMatchingNGrams < 1
+    ) {
+        throw new Error("Invalid similarity analysis settings");
+    }
+
+    return analysisSettings;
 }
 
 async function analyzeSubmission(submissionId) {
@@ -60,10 +75,6 @@ async function analyzeSubmission(submissionId) {
 
     const settings = await getAnalysisSettings();
     const n = settings.ngramSize;
-
-    if (!Number.isInteger(n) || n < 1 || n > 10) {
-        throw new Error("Invalid n-gram size");
-    }
 
     const currentGrams = createNGrams(
         tokenize(current.text),
@@ -171,7 +182,10 @@ async function getPairwiseComparisons() {
                 assignment1: first.assignment,
                 assignment2: second.assignment,
                 similarity: result.score,
-                matchingNGrams: result.matchingNGrams
+                matchingNGrams: result.matchingNGrams,
+                flagged:
+                    result.score >= settings.similarityThreshold &&
+                    result.matchingNGrams.length >= settings.minimumMatchingNGrams
             });
         }
     }

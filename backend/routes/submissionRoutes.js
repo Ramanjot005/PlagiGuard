@@ -5,7 +5,10 @@ const mongoose = require("mongoose");
 const Submission = require("../models/Submission");
 const User = require("../models/User");
 const Assignment = require("../models/Assignment");
-const { analyzeSubmission } = require("../services/similarityService");
+const {
+    getPairwiseComparisons,
+    reanalyzeAllSubmissions
+} = require("../services/similarityService");
 
 const router = express.Router();
 
@@ -57,15 +60,28 @@ router.post("/", async (req, res) => {
             assignment,
             filename: filename || "submission.txt",
             text: cleanText,
-            wordCount: cleanText.split(/\s+/).length
+            wordCount: cleanText.split(/\s+/).length,
+            submittedAt: new Date()
         });
 
-        let analysis = null;
+        let analysis;
 
         try {
-            analysis = await analyzeSubmission(submission._id);
+            const analyses = await reanalyzeAllSubmissions();
+            analysis = analyses.find(
+                result => String(result.submissionId) === String(submission._id)
+            );
+
+            if (!analysis) {
+                throw new Error("New submission was not included in similarity analysis");
+            }
         } catch (analysisError) {
-            console.error("Similarity analysis failed:", analysisError.message);
+            console.error("Similarity analysis failed:", analysisError);
+            return res.status(500).json({
+                success: false,
+                message: "Submission was saved, but similarity analysis failed",
+                submissionId: submission._id
+            });
         }
 
         const savedSubmission = await Submission.findById(submission._id);
@@ -77,6 +93,25 @@ router.post("/", async (req, res) => {
             analysis
         });
     } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// Get pairwise similarity reports across all assignments.
+router.get("/reports/pairwise", async (req, res) => {
+    try {
+        const comparisons = await getPairwiseComparisons();
+
+        return res.json({
+            success: true,
+            count: comparisons.length,
+            comparisons
+        });
+    } catch (error) {
+        console.error("Pairwise similarity report failed:", error);
         return res.status(500).json({
             success: false,
             message: error.message
@@ -107,6 +142,156 @@ router.get("/assignment/:assignmentId", async (req, res) => {
             success: true,
             count: submissions.length,
             submissions
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// Update a submission and refresh comparisons when its text changes.
+router.patch("/:id", async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid submission ID"
+            });
+        }
+
+        const submission = await Submission.findById(req.params.id);
+
+        if (!submission) {
+            return res.status(404).json({
+                success: false,
+                message: "Submission not found"
+            });
+        }
+
+        const body = req.body || {};
+        const { text, filename, marks, feedback, status } = body;
+        const hasUpdates = [
+            "text",
+            "filename",
+            "marks",
+            "feedback",
+            "status"
+        ].some(field => Object.prototype.hasOwnProperty.call(body, field));
+
+        if (!hasUpdates) {
+            return res.status(400).json({
+                success: false,
+                message: "At least one supported submission field is required"
+            });
+        }
+
+        const textChanged = Object.prototype.hasOwnProperty.call(body, "text");
+
+        if (textChanged) {
+            if (typeof text !== "string" || !text.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Submission text must be a non-empty string"
+                });
+            }
+
+            submission.text = text.trim();
+            submission.wordCount = submission.text.split(/\s+/).length;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(body, "filename")) {
+            if (typeof filename !== "string" || !filename.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Filename must be a non-empty string"
+                });
+            }
+
+            submission.filename = filename.trim();
+        }
+
+        if (Object.prototype.hasOwnProperty.call(body, "marks")) {
+            if (
+                marks !== null &&
+                (!Number.isFinite(marks) || marks < 0)
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Marks must be a non-negative number or null"
+                });
+            }
+
+            if (marks !== null) {
+                const assignment = await Assignment.findById(submission.assignment)
+                    .select("maxMarks");
+
+                if (assignment && marks > assignment.maxMarks) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Marks cannot exceed the assignment maximum"
+                    });
+                }
+            }
+
+            submission.marks = marks;
+            submission.markedAt = marks === null ? null : new Date();
+        }
+
+        if (Object.prototype.hasOwnProperty.call(body, "feedback")) {
+            if (typeof feedback !== "string") {
+                return res.status(400).json({
+                    success: false,
+                    message: "Feedback must be a string"
+                });
+            }
+
+            submission.feedback = feedback.trim();
+        }
+
+        if (Object.prototype.hasOwnProperty.call(body, "status")) {
+            if (!["submitted", "flagged", "graded"].includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Status must be submitted, flagged or graded"
+                });
+            }
+
+            submission.status = status;
+        }
+
+        await submission.save();
+
+        let analysis;
+
+        if (textChanged) {
+            try {
+                const analyses = await reanalyzeAllSubmissions();
+                analysis = analyses.find(
+                    result => String(result.submissionId) === String(submission._id)
+                );
+
+                if (!analysis) {
+                    throw new Error("Updated submission was not included in similarity analysis");
+                }
+            } catch (analysisError) {
+                console.error("Similarity analysis failed after submission update:", analysisError);
+                return res.status(500).json({
+                    success: false,
+                    message: "Submission was updated, but similarity analysis failed",
+                    submissionId: submission._id
+                });
+            }
+        }
+
+        const savedSubmission = await Submission.findById(submission._id);
+
+        return res.json({
+            success: true,
+            message: "Submission updated successfully",
+            submission: savedSubmission,
+            ...(analysis ? { analysis } : {})
         });
     } catch (error) {
         return res.status(500).json({
