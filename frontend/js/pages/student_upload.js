@@ -167,10 +167,25 @@ async function loadPageData() {
             }).join('')
             : '<option value="">No assignments available</option>';
 
-        if (preselected && assignments.some(
-            assignment => getAssignmentId(assignment) === preselected
-        )) {
-            assignmentSelect.value = preselected;
+        if (preselected) {
+            const directMatch = assignments.find(
+                assignment => getAssignmentId(assignment) === preselected
+            );
+            if (directMatch) {
+                assignmentSelect.value = getAssignmentId(directMatch);
+            } else {
+                // If preselected is an old/localStorage ID, match by title if possible
+                const localList = typeof PG.getAssignments === 'function' ? PG.getAssignments() : [];
+                const localItem = localList.find(a => a.id === preselected);
+                if (localItem && localItem.title) {
+                    const titleMatch = assignments.find(
+                        a => a.title && a.title.trim().toLowerCase() === localItem.title.trim().toLowerCase()
+                    );
+                    if (titleMatch) {
+                        assignmentSelect.value = getAssignmentId(titleMatch);
+                    }
+                }
+            }
         }
 
         assignmentSelect.disabled = assignments.length === 0;

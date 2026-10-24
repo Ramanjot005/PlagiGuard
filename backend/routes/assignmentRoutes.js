@@ -17,24 +17,6 @@ const Assignment = require("../models/Assignment");
 
 const router = express.Router();
 
-<<<<<<< HEAD
-// Create an assignment
-router.post("/", async (req, res) => {
-    try {
-        const { title, description, createdBy, dueDate, maxMarks } = req.body;
-
-        if (
-            !title ||
-            !mongoose.isValidObjectId(createdBy) ||
-            (maxMarks !== undefined &&
-                (!Number.isFinite(maxMarks) || maxMarks < 1))
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Valid title, instructor, and maximum marks are required"
-            });
-        }
-=======
 // Get all assignments — authenticated users
 router.get("/", protect, getAssignments);
 
@@ -45,7 +27,6 @@ router.post(
   authorizeRoles("instructor"),
   createAssignment
 );
->>>>>>> 35ecd537aad34605bf47727195fcfbd8c82b8442
 
 // Update assignment — instructors only
 router.put(
@@ -55,33 +36,6 @@ router.put(
   updateAssignment
 );
 
-<<<<<<< HEAD
-        if (!instructor || instructor.role !== "instructor") {
-            return res.status(400).json({
-                success: false,
-                message: "Valid instructor not found"
-            });
-        }
-
-        const assignment = await Assignment.create({
-            title,
-            description,
-            createdBy,
-            ...(maxMarks !== undefined ? { maxMarks } : {}),
-            ...(dueDate ? { dueDate } : {})
-        });
-
-        return res.status(201).json({
-            success: true,
-            message: "Assignment created successfully",
-            assignment
-        });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
-=======
 // Get one assignment — authenticated users
 router.get("/:id", protect, async (req, res) => {
   try {
@@ -90,7 +44,6 @@ router.get("/:id", protect, async (req, res) => {
         success: false,
         message: "Invalid assignment ID"
       });
->>>>>>> 35ecd537aad34605bf47727195fcfbd8c82b8442
     }
 
     const assignment = await Assignment.findById(req.params.id)

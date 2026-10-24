@@ -11,9 +11,34 @@ function daysUntil(dateString) {
     return `${diff} days left`;
 }
 
-function renderStudentDashboard() {
-    const assignments = PG.getAssignments();
-    const submissions = PG.getStudentSubmissions(user.id);
+async function renderStudentDashboard() {
+    let assignments = [];
+    let submissions = [];
+
+    if (PG.getAuthToken()) {
+        try {
+            const results = await Promise.all([
+                PG.fetchAssignments(),
+                PG.fetchMySubmissions()
+            ]);
+            assignments = results[0] || [];
+            submissions = (results[1] || []).map(s => ({
+                ...s,
+                id: String(s._id || s.id),
+                assignmentId: String(s.assignment?._id || s.assignment || s.assignmentId || ''),
+                submittedAt: s.createdAt || s.submittedAt || new Date().toISOString(),
+                maxSimilarity: Number(s.maxSimilarity ?? s.analysis?.maxSimilarity ?? 0),
+                flagged: s.status === 'flagged' || s.flagged
+            }));
+        } catch (e) {
+            console.error('Failed to load student dashboard data:', e);
+            assignments = PG.getAssignments();
+            submissions = PG.getStudentSubmissions(user.id);
+        }
+    } else {
+        assignments = PG.getAssignments();
+        submissions = PG.getStudentSubmissions(user.id);
+    }
     const marked = submissions.filter(s => s.marks !== null && s.marks !== undefined);
     const avg = marked.length ? marked.reduce((sum, s) => sum + Number(s.marks), 0) / marked.length : 0;
     const flagged = submissions.filter(s => s.flagged).length;

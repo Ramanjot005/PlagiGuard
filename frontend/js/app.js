@@ -380,7 +380,7 @@ const PG = (() => {
             method: 'GET'
         });
 
-        return result.data || result.assignments || [];
+        return Array.isArray(result) ? result : (result.data || result.assignments || []);
     }
 
     async function createAssignmentAPI(assignment) {
@@ -410,12 +410,19 @@ const PG = (() => {
         });
     }
 
+    async function gradeSubmissionAPI(id, { marks, feedback, status }) {
+        return await apiRequest(/submissions//grade, {
+            method: 'PATCH',
+            body: JSON.stringify({ marks, feedback, status })
+        });
+    }
+
     async function fetchInstructorReports() {
         const result = await apiRequest('/submissions/reports', {
             method: 'GET'
         });
 
-        return result.data || result.submissions || [];
+        return Array.isArray(result) ? result : (result.submissions || result.data || []);
     }
 
 
@@ -602,8 +609,9 @@ const PG = (() => {
         const user = getCurrentUser();
 
         if (!user) {
+            const loginPath = typeof pgPublicHref === 'function' ? pgPublicHref('login.html') : '../html/login.html';
             window.location.href =
-                '../login.html?next=' +
+                loginPath + '?next=' +
                 encodeURIComponent(window.location.pathname);
 
             return null;
@@ -812,6 +820,7 @@ const PG = (() => {
         fetchMySubmissions,
         createSubmissionAPI,
         fetchInstructorReports,
+        gradeSubmissionAPI,
         getSettings,
         saveSettings,
         getUsers,
