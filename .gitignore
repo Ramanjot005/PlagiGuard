@@ -13,3 +13,5 @@ npm-debug.log*
 
 backend/uploads/*
 !backend/uploads/.gitkeep
+
+desktop.ini
