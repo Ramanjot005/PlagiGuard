@@ -372,6 +372,52 @@ const PG = (() => {
     function getAuthToken() {
         return sessionStorage.getItem(KEYS.authToken);
     }
+    
+    // ==================== BACKEND DATA API ====================
+
+    async function fetchAssignments() {
+        const result = await apiRequest('/assignments', {
+            method: 'GET'
+        });
+
+        return result.data || result.assignments || [];
+    }
+
+    async function createAssignmentAPI(assignment) {
+        return await apiRequest('/assignments', {
+            method: 'POST',
+            body: JSON.stringify(assignment)
+        });
+    }
+
+    async function updateAssignmentAPI(id, changes) {
+        return await apiRequest(`/assignments/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(changes)
+        });
+    }
+    async function fetchMySubmissions() {
+        const result = await apiRequest('/submissions/my', {
+            method: 'GET'
+        });
+
+        return result.submissions || result.data || [];
+    }
+    async function createSubmissionAPI(submission) {
+        return await apiRequest('/submissions', {
+            method: 'POST',
+            body: JSON.stringify(submission)
+        });
+    }
+
+    async function fetchInstructorReports() {
+        const result = await apiRequest('/submissions/reports', {
+            method: 'GET'
+        });
+
+        return result.data || result.submissions || [];
+    }
+
 
     // ==================== ASSIGNMENTS ====================
 
@@ -760,6 +806,12 @@ const PG = (() => {
         init,
         apiRequest,
         getAuthToken,
+        fetchAssignments,
+        createAssignmentAPI,
+        updateAssignmentAPI,
+        fetchMySubmissions,
+        createSubmissionAPI,
+        fetchInstructorReports,
         getSettings,
         saveSettings,
         getUsers,
@@ -790,5 +842,6 @@ const PG = (() => {
         daysUntil,
         deadlineState,
         getInitialPage
+        
     };
 })();
