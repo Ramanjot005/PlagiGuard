@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const submissionSchema = new mongoose.Schema(
@@ -8,31 +7,38 @@ const submissionSchema = new mongoose.Schema(
             ref: "User",
             required: true
         },
+
         assignment: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Assignment",
             required: true
         },
+
         filename: {
             type: String,
             default: "submission.txt"
         },
+
         text: {
             type: String,
             required: true
         },
+
         wordCount: {
             type: Number,
             default: 0
         },
+
         maxSimilarity: {
             type: Number,
             default: 0
         },
+
         flagged: {
             type: Boolean,
             default: false
         },
+
         topMatch: {
             submission: {
                 type: mongoose.Schema.Types.ObjectId,
@@ -49,15 +55,30 @@ const submissionSchema = new mongoose.Schema(
                 default: 0
             }
         },
+
         matchingNGrams: {
             type: [String],
             default: []
         },
+
+        // Instructor grading
+        marks: {
+            type: Number,
+            default: null,
+            min: 0
+        },
+
+        feedback: {
+            type: String,
+            default: ""
+        },
+
         status: {
             type: String,
             enum: ["submitted", "flagged", "graded"],
             default: "submitted"
         },
+
         analysis: {
             ngramSize: Number,
             analyzedAt: Date
