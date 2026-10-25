@@ -1,16 +1,20 @@
 
 const mongoose = require("mongoose");
-
-// Import the model that Person 3 will create.
-// We will connect this file once Assignment.js is available.
 const Assignment = require("../models/Assignment");
 
-// GET /api/assignments
-// List assignments
+// List assignments.
+// Students can see all assignments.
+// Instructors can see only their own assignments.
 const getAssignments = async (req, res) => {
   try {
-    const assignments = await Assignment.find()
-      .sort({ createdAt: -1 });
+    const filter =
+      req.user.role === "instructor"
+        ? { createdBy: req.user.id }
+        : {};
+
+    const assignments = await Assignment.find(filter).sort({
+      createdAt: -1
+    });
 
     return res.status(200).json({
       success: true,
@@ -27,16 +31,12 @@ const getAssignments = async (req, res) => {
   }
 };
 
-// POST /api/assignments
-// Create an assignment
+// Create an assignment.
 const createAssignment = async (req, res) => {
   try {
     const { title, description, dueDate, maxMarks } = req.body;
 
-    if (
-      typeof title !== "string" ||
-      !title.trim()
-    ) {
+    if (typeof title !== "string" || !title.trim()) {
       return res.status(400).json({
         success: false,
         message: "Assignment title is required"
@@ -44,8 +44,9 @@ const createAssignment = async (req, res) => {
     }
 
     if (
-      dueDate &&
-      Number.isNaN(Date.parse(dueDate))
+      dueDate !== undefined &&
+      dueDate !== null &&
+      (typeof dueDate !== "string" || Number.isNaN(Date.parse(dueDate)))
     ) {
       return res.status(400).json({
         success: false,
@@ -55,20 +56,20 @@ const createAssignment = async (req, res) => {
 
     if (
       maxMarks !== undefined &&
-      (!Number.isFinite(maxMarks) || maxMarks <= 0)
+      (typeof maxMarks !== "number" ||
+        !Number.isFinite(maxMarks) ||
+        maxMarks < 1)
     ) {
       return res.status(400).json({
         success: false,
-        message: "Maximum marks must be a positive number"
+        message: "Maximum marks must be a number greater than or equal to 1"
       });
     }
 
     const assignment = await Assignment.create({
       title: title.trim(),
       description:
-        typeof description === "string"
-          ? description.trim()
-          : "",
+        typeof description === "string" ? description.trim() : "",
       dueDate: dueDate || null,
       maxMarks: maxMarks ?? 100,
       createdBy: req.user.id
@@ -89,8 +90,7 @@ const createAssignment = async (req, res) => {
   }
 };
 
-// PUT /api/assignments/:id
-// Update an assignment
+// Update an assignment only if the logged-in instructor owns it.
 const updateAssignment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -99,6 +99,22 @@ const updateAssignment = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Invalid assignment ID"
+      });
+    }
+
+    const assignment = await Assignment.findById(id);
+
+    if (!assignment) {
+      return res.status(404).json({
+        success: false,
+        message: "Assignment not found"
+      });
+    }
+
+    if (assignment.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only update your own assignments"
       });
     }
 
@@ -126,10 +142,7 @@ const updateAssignment = async (req, res) => {
 
     if (
       updates.title !== undefined &&
-      (
-        typeof updates.title !== "string" ||
-        !updates.title.trim()
-      )
+      (typeof updates.title !== "string" || !updates.title.trim())
     ) {
       return res.status(400).json({
         success: false,
@@ -152,8 +165,10 @@ const updateAssignment = async (req, res) => {
     }
 
     if (
-      updates.dueDate &&
-      Number.isNaN(Date.parse(updates.dueDate))
+      updates.dueDate !== undefined &&
+      updates.dueDate !== null &&
+      (typeof updates.dueDate !== "string" ||
+        Number.isNaN(Date.parse(updates.dueDate)))
     ) {
       return res.status(400).json({
         success: false,
@@ -163,29 +178,18 @@ const updateAssignment = async (req, res) => {
 
     if (
       updates.maxMarks !== undefined &&
-      (!Number.isFinite(updates.maxMarks) || updates.maxMarks <= 0)
+      (typeof updates.maxMarks !== "number" ||
+        !Number.isFinite(updates.maxMarks) ||
+        updates.maxMarks < 1)
     ) {
       return res.status(400).json({
         success: false,
-        message: "Maximum marks must be a positive number"
+        message: "Maximum marks must be a number greater than or equal to 1"
       });
     }
 
-    const assignment = await Assignment.findByIdAndUpdate(
-      id,
-      { $set: updates },
-      {
-        new: true,
-        runValidators: true
-      }
-    );
-
-    if (!assignment) {
-      return res.status(404).json({
-        success: false,
-        message: "Assignment not found"
-      });
-    }
+    Object.assign(assignment, updates);
+    await assignment.save();
 
     return res.status(200).json({
       success: true,
