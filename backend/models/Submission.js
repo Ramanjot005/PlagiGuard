@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const submissionSchema = new mongoose.Schema(
@@ -71,9 +70,18 @@ const submissionSchema = new mongoose.Schema(
             type: [String],
             default: []
         },
+        marks: {
+            type: Number,
+            default: null
+        },
+        feedback: {
+            type: String,
+            default: "",
+            trim: true
+        },
         status: {
             type: String,
-            enum: ["submitted", "flagged", "graded"],
+            enum: ["submitted", "flagged", "graded", "Marked", "Needs Revision", "Approved"],
             default: "submitted"
         },
         analysis: {

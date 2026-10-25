@@ -1,8 +1,4 @@
-
 const mongoose = require("mongoose");
-
-// Import the model that Person 3 will create.
-// We will connect this file once Assignment.js is available.
 const Assignment = require("../models/Assignment");
 
 // GET /api/assignments
@@ -154,7 +150,7 @@ const updateAssignment = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "Course cannot be empty"
+        message: "Course name cannot be empty"
       });
     }
 

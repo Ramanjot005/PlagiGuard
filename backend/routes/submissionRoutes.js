@@ -21,6 +21,7 @@ const {
 
 const router = express.Router();
 
+// Student submits an assignment
 router.post(
   "/",
   protect,
@@ -28,6 +29,7 @@ router.post(
   createSubmission
 );
 
+// Student views their own submissions
 router.get(
   "/my",
   protect,
@@ -35,6 +37,7 @@ router.get(
   getMySubmissions
 );
 
+// Instructor views submission reports
 router.get(
   "/reports",
   protect,
@@ -42,6 +45,7 @@ router.get(
   getSubmissionReports
 );
 
+// Instructor views pairwise similarity reports
 router.get(
   "/reports/pairwise",
   protect,
@@ -65,6 +69,7 @@ router.get(
   }
 );
 
+// Instructor grades a submission
 router.patch(
   "/:id/grade",
   protect,
@@ -72,6 +77,7 @@ router.patch(
   gradeSubmission
 );
 
+// Instructor views submissions for one assignment
 router.get(
   "/assignment/:assignmentId",
   protect,
@@ -120,6 +126,8 @@ router.get(
 
 router.patch("/:id", protect, updateSubmission);
 
+// Fetch one submission
+// Students can only access their own submission
 router.get("/:id", protect, async (req, res) => {
   try {
     const { id } = req.params;
@@ -133,7 +141,7 @@ router.get("/:id", protect, async (req, res) => {
 
     const submission = await Submission.findById(id)
       .populate("student", "name email")
-      .populate("assignment", "title course");
+      .populate("assignment", "title course maxMarks");
 
     if (!submission) {
       return res.status(404).json({
@@ -142,9 +150,15 @@ router.get("/:id", protect, async (req, res) => {
       });
     }
 
+    const studentId = String(
+      submission.student?._id || submission.student
+    );
+
+    const currentUserId = String(req.user.id || req.user._id);
+
     if (
       req.user.role === "student" &&
-      submission.student._id.toString() !== req.user.id
+      studentId !== currentUserId
     ) {
       return res.status(403).json({
         success: false,

@@ -372,6 +372,59 @@ const PG = (() => {
     function getAuthToken() {
         return sessionStorage.getItem(KEYS.authToken);
     }
+    
+    // ==================== BACKEND DATA API ====================
+
+    async function fetchAssignments() {
+        const result = await apiRequest('/assignments', {
+            method: 'GET'
+        });
+
+        return Array.isArray(result) ? result : (result.data || result.assignments || []);
+    }
+
+    async function createAssignmentAPI(assignment) {
+        return await apiRequest('/assignments', {
+            method: 'POST',
+            body: JSON.stringify(assignment)
+        });
+    }
+
+    async function updateAssignmentAPI(id, changes) {
+        return await apiRequest(`/assignments/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(changes)
+        });
+    }
+    async function fetchMySubmissions() {
+        const result = await apiRequest('/submissions/my', {
+            method: 'GET'
+        });
+
+        return result.submissions || result.data || [];
+    }
+    async function createSubmissionAPI(submission) {
+        return await apiRequest('/submissions', {
+            method: 'POST',
+            body: JSON.stringify(submission)
+        });
+    }
+
+    async function gradeSubmissionAPI(id, { marks, feedback, status }) {
+        return await apiRequest(/submissions//grade, {
+            method: 'PATCH',
+            body: JSON.stringify({ marks, feedback, status })
+        });
+    }
+
+    async function fetchInstructorReports() {
+        const result = await apiRequest('/submissions/reports', {
+            method: 'GET'
+        });
+
+        return Array.isArray(result) ? result : (result.submissions || result.data || []);
+    }
+
 
     // ==================== ASSIGNMENTS ====================
 
@@ -556,8 +609,9 @@ const PG = (() => {
         const user = getCurrentUser();
 
         if (!user) {
+            const loginPath = typeof pgPublicHref === 'function' ? pgPublicHref('login.html') : '../html/login.html';
             window.location.href =
-                '../login.html?next=' +
+                loginPath + '?next=' +
                 encodeURIComponent(window.location.pathname);
 
             return null;
@@ -760,6 +814,13 @@ const PG = (() => {
         init,
         apiRequest,
         getAuthToken,
+        fetchAssignments,
+        createAssignmentAPI,
+        updateAssignmentAPI,
+        fetchMySubmissions,
+        createSubmissionAPI,
+        fetchInstructorReports,
+        gradeSubmissionAPI,
         getSettings,
         saveSettings,
         getUsers,
@@ -790,5 +851,6 @@ const PG = (() => {
         daysUntil,
         deadlineState,
         getInitialPage
+        
     };
 })();

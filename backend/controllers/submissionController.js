@@ -1,7 +1,7 @@
-
 const mongoose = require("mongoose");
 const Submission = require("../models/Submission");
 const Assignment = require("../models/Assignment");
+const Settings = require("../models/Settings");
 const {
   analyzeSubmission,
   getPairwiseComparisons,
@@ -40,6 +40,17 @@ const createSubmission = async (req, res) => {
     const cleanText = text.trim();
     const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
 
+    // Enforce minimum words setting
+    const settings = await Settings.findOne({ key: "global" }).lean();
+    const minimumWords = settings?.minimumWords ?? 20;
+
+    if (wordCount < minimumWords) {
+      return res.status(400).json({
+        success: false,
+        message: `Your submission has ${wordCount} words. Minimum required words: ${minimumWords}.`
+      });
+    }
+
     const submission = await Submission.create({
       student: req.user.id,
       assignment,
@@ -73,7 +84,7 @@ const createSubmission = async (req, res) => {
 
     const savedSubmission = await Submission.findById(submission._id)
       .select("-text")
-      .populate("assignment", "title course");
+      .populate("assignment", "title course dueDate maxMarks");
 
     return res.status(201).json({
       success: true,
@@ -125,7 +136,7 @@ const getSubmissionReports = async (req, res) => {
       Submission.find()
         .select("-text")
         .populate("student", "name email")
-        .populate("assignment", "title course")
+        .populate("assignment", "title course maxMarks")
         .sort({ createdAt: -1 })
         .lean(),
 
@@ -261,7 +272,7 @@ const updateSubmission = async (req, res) => {
 };
 
 // PATCH /api/submissions/:id/grade
-// Mark a submission as graded.
+// Mark a submission as graded, record marks and feedback.
 const gradeSubmission = async (req, res) => {
   try {
     const { id } = req.params;
@@ -273,7 +284,7 @@ const gradeSubmission = async (req, res) => {
       });
     }
 
-    const submission = await Submission.findById(id);
+    const submission = await Submission.findById(id).populate("assignment", "title maxMarks");
 
     if (!submission) {
       return res.status(404).json({
@@ -282,12 +293,71 @@ const gradeSubmission = async (req, res) => {
       });
     }
 
-    submission.status = "graded";
+    const { marks, feedback, status } = req.body;
+
+    // Validate marks
+    if (
+      marks === undefined ||
+      marks === null ||
+      typeof marks !== "number" ||
+      !Number.isFinite(marks)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Marks must be a valid number"
+      });
+    }
+
+    if (marks < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Marks cannot be negative"
+      });
+    }
+
+    const maxMarks = submission.assignment?.maxMarks ?? 100;
+
+    if (marks > maxMarks) {
+      return res.status(400).json({
+        success: false,
+        message: `Marks cannot exceed maximum marks (${maxMarks})`
+      });
+    }
+
+    // Validate feedback
+    if (feedback !== undefined && typeof feedback !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Feedback must be text"
+      });
+    }
+
+    // Validate status if provided
+    const allowedStatuses = [
+      "submitted",
+      "flagged",
+      "graded",
+      "Marked",
+      "Needs Revision",
+      "Approved"
+    ];
+
+    if (status !== undefined && !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed statuses are: ${allowedStatuses.join(", ")}`
+      });
+    }
+
+    submission.marks = marks;
+    submission.feedback = typeof feedback === "string" ? feedback.trim() : "";
+    submission.status = status || "graded";
+
     await submission.save();
 
     return res.status(200).json({
       success: true,
-      message: "Submission marked as graded",
+      message: "Submission graded successfully",
       submission
     });
   } catch (error) {

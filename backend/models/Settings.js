@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const settingsSchema = new mongoose.Schema(
@@ -25,6 +24,12 @@ const settingsSchema = new mongoose.Schema(
             type: Number,
             default: 3,
             min: 1
+        },
+        minimumWords: {
+            type: Number,
+            default: 20,
+            min: 5,
+            max: 5000
         }
     },
     { timestamps: true }
