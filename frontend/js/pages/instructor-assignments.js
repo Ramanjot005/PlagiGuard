@@ -157,10 +157,20 @@ function openReview(id) {
         const status = wrap.querySelector('#status').value;
 
         if (PG.getAuthToken() && s?._id) {
-          await PG.gradeSubmissionAPI(s._id, { marks, feedback, status: status === 'Marked' ? 'graded' : status.toLowerCase() });
-        } else {
-          PG.markSubmission(id, marks, feedback, status);
-        }
+    const statusMap = {
+        'Marked': 'graded',
+        'Needs Revision': 'Needs Revision',
+        'Approved': 'Approved'
+    };
+
+    await PG.gradeSubmissionAPI(s._id, {
+        marks,
+        feedback,
+        status: statusMap[status] || 'graded'
+    });
+} else {
+    PG.markSubmission(id, marks, feedback, status);
+}
         wrap.remove();
         showToast('Mark saved successfully.', 'success');
         await loadData();
