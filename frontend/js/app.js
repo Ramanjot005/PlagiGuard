@@ -411,7 +411,7 @@ const PG = (() => {
     }
 
     async function gradeSubmissionAPI(id, { marks, feedback, status }) {
-        return await apiRequest(/submissions//grade, {
+        return await apiRequest(`/submissions/${id}/grade`, {
             method: 'PATCH',
             body: JSON.stringify({ marks, feedback, status })
         });
