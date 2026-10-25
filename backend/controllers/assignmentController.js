@@ -31,15 +31,17 @@ const getAssignments = async (req, res) => {
 // Create an assignment
 const createAssignment = async (req, res) => {
   try {
-    const { title, description, dueDate, maxMarks } = req.body;
+    const { title, course, description, dueDate, maxMarks } = req.body;
 
     if (
       typeof title !== "string" ||
-      !title.trim()
+      !title.trim() ||
+      typeof course !== "string" ||
+      !course.trim()
     ) {
       return res.status(400).json({
         success: false,
-        message: "Assignment title is required"
+        message: "Assignment title and course are required"
       });
     }
 
@@ -65,6 +67,7 @@ const createAssignment = async (req, res) => {
 
     const assignment = await Assignment.create({
       title: title.trim(),
+      course: course.trim(),
       description:
         typeof description === "string"
           ? description.trim()
@@ -104,6 +107,7 @@ const updateAssignment = async (req, res) => {
 
     const allowedFields = [
       "title",
+      "course",
       "description",
       "dueDate",
       "maxMarks"
@@ -139,6 +143,23 @@ const updateAssignment = async (req, res) => {
 
     if (updates.title !== undefined) {
       updates.title = updates.title.trim();
+    }
+
+    if (
+      updates.course !== undefined &&
+      (
+        typeof updates.course !== "string" ||
+        !updates.course.trim()
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Course cannot be empty"
+      });
+    }
+
+    if (updates.course !== undefined) {
+      updates.course = updates.course.trim();
     }
 
     if (

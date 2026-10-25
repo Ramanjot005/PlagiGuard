@@ -4,7 +4,8 @@ const Submission = require("../models/Submission");
 const Assignment = require("../models/Assignment");
 const {
   analyzeSubmission,
-  getPairwiseComparisons
+  getPairwiseComparisons,
+  reanalyzeAllSubmissions
 } = require("../services/similarityService");
 
 // POST /api/submissions
@@ -50,29 +51,35 @@ const createSubmission = async (req, res) => {
       wordCount
     });
 
-    let analysis = null;
-    let analysisWarning = null;
+    let analysis;
 
     try {
-      analysis = await analyzeSubmission(submission._id);
+      const analyses = await reanalyzeAllSubmissions();
+      analysis = analyses.find(
+        result => String(result.submissionId) === String(submission._id)
+      );
+
+      if (!analysis) {
+        throw new Error("New submission was not included in similarity analysis");
+      }
     } catch (error) {
       console.error("Similarity analysis error:", error.message);
-      analysisWarning =
-        "Submission saved, but similarity analysis could not be completed.";
+      return res.status(500).json({
+        success: false,
+        message: "Submission was saved, but similarity analysis failed",
+        submissionId: submission._id
+      });
     }
 
     const savedSubmission = await Submission.findById(submission._id)
       .select("-text")
-      .populate("assignment", "title");
+      .populate("assignment", "title course");
 
     return res.status(201).json({
       success: true,
-      message: analysisWarning
-        ? "Submission saved successfully"
-        : "Submission saved and analyzed successfully",
+      message: "Submission saved and analyzed successfully",
       submission: savedSubmission,
-      analysis,
-      warning: analysisWarning
+      analysis
     });
   } catch (error) {
     console.error("Create submission error:", error.message);
@@ -92,7 +99,7 @@ const getMySubmissions = async (req, res) => {
       student: req.user.id
     })
       .select("-text")
-      .populate("assignment", "title dueDate maxMarks")
+      .populate("assignment", "title course dueDate maxMarks")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -118,7 +125,7 @@ const getSubmissionReports = async (req, res) => {
       Submission.find()
         .select("-text")
         .populate("student", "name email")
-        .populate("assignment", "title")
+        .populate("assignment", "title course")
         .sort({ createdAt: -1 })
         .lean(),
 
@@ -137,6 +144,118 @@ const getSubmissionReports = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Unable to fetch submission reports"
+    });
+  }
+};
+
+const updateSubmission = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid submission ID"
+      });
+    }
+
+    const submission = await Submission.findById(id);
+
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: "Submission not found"
+      });
+    }
+
+    if (
+      req.user.role === "student" &&
+      String(submission.student) !== req.user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only update your own submission"
+      });
+    }
+
+    const body = req.body || {};
+    const fields = ["text", "filename"];
+    const updates = fields.filter(field =>
+      Object.prototype.hasOwnProperty.call(body, field)
+    );
+
+    if (updates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Submission text or filename is required"
+      });
+    }
+
+    const textChanged = Object.prototype.hasOwnProperty.call(body, "text");
+
+    if (textChanged) {
+      if (typeof body.text !== "string" || !body.text.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Submission text must be a non-empty string"
+        });
+      }
+
+      submission.text = body.text.trim();
+      submission.wordCount = submission.text.split(/\s+/).filter(Boolean).length;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, "filename")) {
+      if (typeof body.filename !== "string" || !body.filename.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Filename must be a non-empty string"
+        });
+      }
+
+      submission.filename = body.filename.trim();
+    }
+
+    await submission.save();
+
+    let analysis;
+
+    if (textChanged) {
+      try {
+        const analyses = await reanalyzeAllSubmissions();
+        analysis = analyses.find(
+          result => String(result.submissionId) === String(submission._id)
+        );
+
+        if (!analysis) {
+          throw new Error("Updated submission was not included in similarity analysis");
+        }
+      } catch (error) {
+        console.error("Similarity analysis error after submission update:", error.message);
+        return res.status(500).json({
+          success: false,
+          message: "Submission was updated, but similarity analysis failed",
+          submissionId: submission._id
+        });
+      }
+    }
+
+    const savedSubmission = await Submission.findById(submission._id)
+      .select("-text")
+      .populate("assignment", "title course");
+
+    return res.status(200).json({
+      success: true,
+      message: "Submission updated successfully",
+      submission: savedSubmission,
+      ...(analysis ? { analysis } : {})
+    });
+  } catch (error) {
+    console.error("Update submission error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Submission update failed",
+      ...(error.submissionId ? { submissionId: error.submissionId } : {})
     });
   }
 };
@@ -185,5 +304,6 @@ module.exports = {
   createSubmission,
   getMySubmissions,
   getSubmissionReports,
-  gradeSubmission
+  gradeSubmission,
+  updateSubmission
 };

@@ -21,9 +21,13 @@ const createdSubmissionIds = [];
 
 async function runTest() {
     try {
-        await connectDB();
+        const testDatabaseName = "plagiguard_similarity_test";
+        await connectDB({ dbName: testDatabaseName });
 
-        console.log("Connected to MongoDB");
+        const isAtlas = mongoose.connection.host.endsWith(".mongodb.net");
+        console.log(
+            `Connected to ${isAtlas ? "MongoDB Atlas" : "MongoDB"} test database "${mongoose.connection.name}"`
+        );
 
         const runId = randomUUID();
 
@@ -56,12 +60,14 @@ async function runTest() {
         // Create assignment
         const assignment = await Assignment.create({
             title: `AI Assignment ${runId}`,
+            course: "Computer Science",
             createdBy: instructor._id
         });
         createdAssignmentIds.push(assignment._id);
 
         const secondAssignment = await Assignment.create({
             title: `AI Assignment 2 ${runId}`,
+            course: "Computer Science",
             createdBy: instructor._id
         });
         createdAssignmentIds.push(secondAssignment._id);
@@ -90,6 +96,11 @@ async function runTest() {
 
         const analyses = await reanalyzeAllSubmissions();
         const comparisons = await getPairwiseComparisons();
+        const [savedAssignment, savedSub1, savedSub2] = await Promise.all([
+            Assignment.findById(assignment._id).lean(),
+            Submission.findById(sub1._id).lean(),
+            Submission.findById(sub2._id).lean()
+        ]);
         const firstAnalysis = analyses.find(
             result => String(result.submissionId) === String(sub1._id)
         );
@@ -111,6 +122,14 @@ async function runTest() {
         if (
             !firstAnalysis ||
             !secondAnalysis ||
+            !savedAssignment ||
+            savedAssignment.course !== "Computer Science" ||
+            !savedSub1 ||
+            !savedSub2 ||
+            savedSub1.maxSimilarity !== 100 ||
+            savedSub2.maxSimilarity !== 100 ||
+            String(savedSub1.topMatch.submission) !== String(sub2._id) ||
+            String(savedSub2.topMatch.submission) !== String(sub1._id) ||
             !crossAssignmentMatch ||
             crossAssignmentMatch.similarity !== 100 ||
             String(sub1.assignment) === String(sub2.assignment)
