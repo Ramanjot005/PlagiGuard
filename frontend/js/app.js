@@ -1,101 +1,101 @@
 
 /*
  * PlagiGuard
- * Existing frontend functionality with backend authentication support.
+ * Existing frontend functionality with backend API support.
  * Backend: Node.js + Express + MongoDB
  */
 
 const PG = (() => {
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = "http://localhost:5000/api";
 
     const KEYS = {
-        users: 'pg_users_v1',
-        assignments: 'pg_assignments_v1',
-        submissions: 'pg_submissions_v1',
-        settings: 'pg_settings_v1',
-        session: 'pg_session_v1',
-        authToken: 'pg_auth_token',
-        authUser: 'pg_auth_user'
+        users: "pg_users_v1",
+        assignments: "pg_assignments_v1",
+        submissions: "pg_submissions_v1",
+        settings: "pg_settings_v1",
+        session: "pg_session_v1",
+        authToken: "pg_auth_token",
+        authUser: "pg_auth_user"
     };
 
     const DEFAULT_SETTINGS = {
         ngramSize: 3,
         similarityThreshold: 30,
         minimumWords: 20,
-        method: 'Jaccard'
+        method: "Jaccard"
     };
 
     const DEFAULT_ASSIGNMENTS = [
         {
-            id: 'asg-101',
-            title: 'Introduction to JavaScript',
-            course: 'Web Development',
-            description: 'Explain variables, data types, operators and conditional statements with small examples.',
-            dueDate: '2026-09-05',
+            id: "asg-101",
+            title: "Introduction to JavaScript",
+            course: "Web Development",
+            description: "Explain variables, data types, operators and conditional statements with small examples.",
+            dueDate: "2026-09-05",
             maxMarks: 10
         },
         {
-            id: 'asg-102',
-            title: 'Loops and Functions',
-            course: 'JavaScript Programming',
-            description: 'Write a short explanation and examples for loops, functions, parameters, return values and arrow functions.',
-            dueDate: '2026-09-12',
+            id: "asg-102",
+            title: "Loops and Functions",
+            course: "JavaScript Programming",
+            description: "Explain loops, functions, parameters and return values with examples.",
+            dueDate: "2026-09-12",
             maxMarks: 10
         },
         {
-            id: 'asg-103',
-            title: 'DOM and Form Validation',
-            course: 'Frontend Development',
-            description: 'Describe DOM selection/manipulation, events, form validation and preventDefault with practical examples.',
-            dueDate: '2026-09-19',
+            id: "asg-103",
+            title: "DOM and Form Validation",
+            course: "Frontend Development",
+            description: "Describe DOM manipulation, events and form validation.",
+            dueDate: "2026-09-19",
             maxMarks: 10
         }
     ];
 
     const DEFAULT_USERS = [
         {
-            id: 'usr-inst-1',
-            name: 'Demo Instructor',
-            email: 'instructor@university.edu',
-            password: 'password123',
-            role: 'instructor',
-            studentId: '',
-            bio: 'Instructor account',
-            avatar: '',
+            id: "usr-inst-1",
+            name: "Demo Instructor",
+            email: "instructor@university.edu",
+            password: "password123",
+            role: "instructor",
+            studentId: "",
+            bio: "Instructor account",
+            avatar: "",
             createdAt: new Date().toISOString()
         },
         {
-            id: 'usr-stu-1',
-            name: 'Aarav Sharma',
-            email: 'aarav@student.edu',
-            password: 'password123',
-            role: 'student',
-            studentId: 'STU001',
-            bio: 'JavaScript student',
-            avatar: '',
+            id: "usr-stu-1",
+            name: "Aarav Sharma",
+            email: "aarav@student.edu",
+            password: "password123",
+            role: "student",
+            studentId: "STU001",
+            bio: "JavaScript student",
+            avatar: "",
             createdAt: new Date().toISOString()
         },
         {
-            id: 'usr-stu-2',
-            name: 'Meera Kapoor',
-            email: 'meera@student.edu',
-            password: 'password123',
-            role: 'student',
-            studentId: 'STU002',
-            bio: '',
-            avatar: '',
+            id: "usr-stu-2",
+            name: "Meera Kapoor",
+            email: "meera@student.edu",
+            password: "password123",
+            role: "student",
+            studentId: "STU002",
+            bio: "",
+            avatar: "",
             createdAt: new Date().toISOString()
         }
     ];
 
-    // ==================== STORAGE HELPERS ====================
+    // ---------------- STORAGE HELPERS ----------------
 
     function read(key, fallback) {
         try {
             const value = localStorage.getItem(key);
             return value ? JSON.parse(value) : fallback;
         } catch (error) {
-            console.error('Storage read failed:', error);
+            console.error("Storage read failed:", error);
             return fallback;
         }
     }
@@ -109,74 +109,72 @@ const PG = (() => {
     }
 
     function escapeHtml(value) {
-        return String(value ?? '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
     }
 
-    // ==================== DATE HELPERS ====================
+    // ---------------- DATE HELPERS ----------------
 
     function daysUntil(dateString) {
-        if (!dateString) return 'No due date';
+        if (!dateString) return "No due date";
 
         const due = new Date(`${dateString}T23:59:59`);
-        const now = new Date();
-        const diff = Math.ceil((due - now) / 86400000);
+        const diff = Math.ceil((due - new Date()) / 86400000);
 
-        if (Number.isNaN(diff)) return 'Invalid date';
+        if (Number.isNaN(diff)) return "Invalid date";
         if (diff < 0) {
-            return `Overdue by ${Math.abs(diff)} day${Math.abs(diff) === 1 ? '' : 's'}`;
+            return `Overdue by ${Math.abs(diff)} day${Math.abs(diff) === 1 ? "" : "s"}`;
         }
-        if (diff === 0) return 'Due today';
-        if (diff === 1) return 'Due tomorrow';
+        if (diff === 0) return "Due today";
+        if (diff === 1) return "Due tomorrow";
 
         return `${diff} days left`;
     }
 
     function deadlineState(dateString) {
-        if (!dateString) return 'none';
+        if (!dateString) return "none";
 
         const due = new Date(`${dateString}T23:59:59`);
-        const now = new Date();
-        const diff = Math.ceil((due - now) / 86400000);
+        const diff = Math.ceil((due - new Date()) / 86400000);
 
-        if (Number.isNaN(diff)) return 'none';
-        if (diff < 0) return 'overdue';
-        if (diff <= 2) return 'urgent';
-        if (diff <= 7) return 'soon';
+        if (Number.isNaN(diff)) return "none";
+        if (diff < 0) return "overdue";
+        if (diff <= 2) return "urgent";
+        if (diff <= 7) return "soon";
 
-        return 'normal';
+        return "normal";
     }
 
     function formatDate(dateString) {
-        if (!dateString) return '—';
+        if (!dateString) return "—";
 
         const date = new Date(dateString);
 
         return Number.isNaN(date.getTime())
             ? dateString
             : date.toLocaleDateString(undefined, {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
             });
     }
 
-    // ==================== TEXT SIMILARITY HELPERS ====================
+    // ---------------- SIMILARITY HELPERS ----------------
 
     function normalizeText(text) {
-        return String(text || '')
+        return String(text || "")
             .toLowerCase()
-            .replace(/[^\w\s]/g, ' ')
-            .replace(/\s+/g, ' ')
+            .replace(/[^\w\s]/g, " ")
+            .replace(/\s+/g, " ")
             .trim();
     }
 
     function tokenize(text) {
-        return normalizeText(text).split(' ').filter(Boolean);
+        return normalizeText(text).split(" ").filter(Boolean);
     }
 
     function createNGrams(tokens, n) {
@@ -184,8 +182,8 @@ const PG = (() => {
 
         if (tokens.length < n) return grams;
 
-        for (let i = 0; i <= tokens.length - n; i += 1) {
-            grams.push(tokens.slice(i, i + n).join(' '));
+        for (let i = 0; i <= tokens.length - n; i++) {
+            grams.push(tokens.slice(i, i + n).join(" "));
         }
 
         return grams;
@@ -219,7 +217,7 @@ const PG = (() => {
         };
     }
 
-    // ==================== SETTINGS ====================
+    // ---------------- SETTINGS ----------------
 
     function getSettings() {
         return {
@@ -235,7 +233,7 @@ const PG = (() => {
         });
     }
 
-    // ==================== INITIALIZATION ====================
+    // ---------------- INITIALIZATION ----------------
 
     function init() {
         if (!localStorage.getItem(KEYS.users)) {
@@ -279,10 +277,9 @@ const PG = (() => {
         write(KEYS.submissions, submissions);
     }
 
-    // ==================== CURRENT USER ====================
+    // ---------------- CURRENT USER ----------------
 
     function getCurrentUser() {
-        // Prefer a user authenticated by the backend.
         const backendUser = sessionStorage.getItem(KEYS.authUser);
         const backendToken = sessionStorage.getItem(KEYS.authToken);
 
@@ -290,23 +287,22 @@ const PG = (() => {
             try {
                 return JSON.parse(backendUser);
             } catch (error) {
-                console.error('Unable to read authenticated user:', error);
+                console.error("Unable to read authenticated user:", error);
             }
         }
 
-        // Preserve compatibility with the old browser-only session.
         const id = sessionStorage.getItem(KEYS.session);
 
         return getUsers().find(user => user.id === id) || null;
     }
 
-    // ==================== BACKEND API HELPERS ====================
+    // ---------------- BACKEND API ----------------
 
     async function apiRequest(path, options = {}) {
         const token = sessionStorage.getItem(KEYS.authToken);
 
         const headers = {
-            'Content-Type': 'application/json',
+            ...(options.body ? { "Content-Type": "application/json" } : {}),
             ...(options.headers || {})
         };
 
@@ -323,7 +319,7 @@ const PG = (() => {
             });
         } catch (error) {
             throw new Error(
-                'Cannot connect to the PlagiGuard backend. Make sure the server is running on port 5000.'
+                "Cannot connect to the backend. Make sure the server is running on port 5000."
             );
         }
 
@@ -332,48 +328,63 @@ const PG = (() => {
         try {
             result = await response.json();
         } catch (error) {
-            throw new Error('The server returned an invalid response.');
+            throw new Error("The server returned an invalid response.");
         }
 
         if (!response.ok || result.success === false) {
-            throw new Error(result.message || `Request failed (${response.status}).`);
+            throw new Error(
+                result.message || `Request failed (${response.status}).`
+            );
         }
 
         return result;
     }
 
-    // ==================== BACKEND LOGIN ====================
+    function getAuthToken() {
+        return sessionStorage.getItem(KEYS.authToken);
+    }
 
     async function loginWithBackend(email, password) {
-        const result = await apiRequest('/auth/login', {
-            method: 'POST',
+        const result = await apiRequest("/auth/login", {
+            method: "POST",
             body: JSON.stringify({
-                email: String(email || '').trim(),
+                email: String(email || "").trim(),
                 password
             })
         });
 
         if (!result.token || !result.data) {
-            throw new Error('The server did not return a valid login session.');
+            throw new Error("The server did not return a valid login session.");
         }
 
-        const user = result.data;
-
-        // Remove the old browser-only session so it cannot override this login.
         sessionStorage.removeItem(KEYS.session);
-
         sessionStorage.setItem(KEYS.authToken, result.token);
-        sessionStorage.setItem(KEYS.authUser, JSON.stringify(user));
+        sessionStorage.setItem(KEYS.authUser, JSON.stringify(result.data));
 
-        return user;
+        return result.data;
     }
 
-    // Optional helper for other frontend features to call the backend.
-    function getAuthToken() {
-        return sessionStorage.getItem(KEYS.authToken);
+    // Retrieve assignments saved in MongoDB.
+    async function getBackendAssignments() {
+        const result = await apiRequest("/assignments");
+        const assignments = result.assignments || result.data;
+
+        if (!Array.isArray(assignments)) {
+            throw new Error("The backend did not return an assignment list.");
+        }
+
+        return assignments.map(assignment => ({
+            ...assignment,
+            id: assignment._id || assignment.id,
+            course: assignment.course || "",
+            dueDate: assignment.dueDate
+                ? String(assignment.dueDate).slice(0, 10)
+                : "",
+            maxMarks: assignment.maxMarks ?? 100
+        }));
     }
 
-    // ==================== ASSIGNMENTS ====================
+    // ---------------- ASSIGNMENTS ----------------
 
     function createAssignment({
         title,
@@ -384,28 +395,32 @@ const PG = (() => {
     }) {
         const user = getCurrentUser();
 
-        if (!user || user.role !== 'instructor') {
-            throw new Error('Only instructors can create assignments.');
+        if (!user || user.role !== "instructor") {
+            throw new Error("Only instructors can create assignments.");
         }
 
-        const cleanTitle = String(title || '').trim();
-        const cleanCourse = String(course || '').trim();
-        const cleanDescription = String(description || '').trim();
-        const cleanDueDate = String(dueDate || '').trim();
+        if (getAuthToken()) {
+            throw new Error(
+                "Use createBackendAssignment() for backend instructor accounts."
+            );
+        }
+
+        const cleanTitle = String(title || "").trim();
+        const cleanCourse = String(course || "").trim();
+        const cleanDescription = String(description || "").trim();
+        const cleanDueDate = String(dueDate || "").trim();
         const marks = Number(maxMarks);
 
         if (!cleanTitle || !cleanCourse || !cleanDescription || !cleanDueDate) {
-            throw new Error('Please complete all assignment fields.');
+            throw new Error("Please complete all assignment fields.");
         }
 
         if (!Number.isFinite(marks) || marks <= 0) {
-            throw new Error('Maximum marks must be greater than 0.');
+            throw new Error("Maximum marks must be greater than 0.");
         }
 
-        const assignments = getAssignments();
-
         const assignment = {
-            id: uid('asg'),
+            id: uid("asg"),
             title: cleanTitle,
             course: cleanCourse,
             description: cleanDescription,
@@ -415,75 +430,136 @@ const PG = (() => {
             createdAt: new Date().toISOString()
         };
 
+        const assignments = getAssignments();
         assignments.unshift(assignment);
         saveAssignments(assignments);
 
         return assignment;
     }
 
-    function updateAssignment(id, changes) {
+    async function createBackendAssignment({
+        title,
+        course,
+        description,
+        dueDate,
+        maxMarks
+    }) {
         const user = getCurrentUser();
 
-        if (!user || user.role !== 'instructor') {
-            throw new Error('Only instructors can edit assignments.');
+        if (!user || user.role !== "instructor") {
+            throw new Error("Only instructors can create assignments.");
+        }
+
+        const cleanTitle = String(title || "").trim();
+        const cleanCourse = String(course || "").trim();
+        const cleanDescription = String(description || "").trim();
+        const marks = Number(maxMarks);
+
+        if (!cleanTitle) {
+            throw new Error("Assignment title is required.");
+        }
+
+        if (!cleanCourse) {
+            throw new Error("Course or module is required.");
+        }
+
+        if (
+            maxMarks !== undefined &&
+            (!Number.isFinite(marks) || marks < 1)
+        ) {
+            throw new Error("Maximum marks must be at least 1.");
+        }
+
+        const result = await apiRequest("/assignments", {
+            method: "POST",
+            body: JSON.stringify({
+                title: cleanTitle,
+                course: cleanCourse,
+                description: cleanDescription,
+                dueDate: dueDate || null,
+                maxMarks: maxMarks === undefined ? 100 : marks
+            })
+        });
+
+        return result.assignment || result.data;
+    }
+
+    async function updateAssignment(id, changes) {
+        if (getAuthToken()) {
+            const result = await apiRequest(
+                `/assignments/${encodeURIComponent(id)}`,
+                {
+                    method: "PUT",
+                    body: JSON.stringify(changes)
+                }
+            );
+
+            return result.assignment || result.data;
+        }
+
+        const user = getCurrentUser();
+
+        if (!user || user.role !== "instructor") {
+            throw new Error("Only instructors can edit assignments.");
         }
 
         const assignments = getAssignments();
         const index = assignments.findIndex(a => a.id === id);
 
         if (index === -1) {
-            throw new Error('Assignment not found.');
+            throw new Error("Assignment not found.");
         }
 
-        const next = {
+        assignments[index] = {
             ...assignments[index],
             ...changes,
             updatedAt: new Date().toISOString()
         };
 
-        assignments[index] = next;
         saveAssignments(assignments);
 
-        return next;
+        return assignments[index];
     }
 
-    function deleteAssignment(id) {
-        const user = getCurrentUser();
-
-        if (!user || user.role !== 'instructor') {
-            throw new Error('Only instructors can delete assignments.');
+    async function deleteAssignment(id) {
+        if (getAuthToken()) {
+            throw new Error(
+                "Assignment deletion is not available because the backend has no DELETE route yet."
+            );
         }
 
-        const assignments = getAssignments().filter(a => a.id !== id);
+        const user = getCurrentUser();
 
-        saveAssignments(assignments);
+        if (!user || user.role !== "instructor") {
+            throw new Error("Only instructors can delete assignments.");
+        }
+
+        saveAssignments(getAssignments().filter(a => a.id !== id));
 
         return true;
     }
 
-    // ==================== LEGACY REGISTRATION ====================
+    // ---------------- REGISTRATION ----------------
 
-    // This function still registers users in browser storage.
-    // Backend registration must be integrated separately.
     function register({ name, email, password, role, studentId }) {
         const users = getUsers();
-        const cleanEmail = email.trim().toLowerCase();
+        const cleanEmail = String(email || "").trim().toLowerCase();
 
         if (users.some(user => user.email.toLowerCase() === cleanEmail)) {
             throw new Error(
-                'An account with this email already exists. Please login instead.'
+                "An account with this email already exists. Please login instead."
             );
         }
 
         const user = {
-            id: uid('usr'),
-            name: name.trim(),
+            id: uid("usr"),
+            name: String(name || "").trim(),
             email: cleanEmail,
             password,
             role,
-            studentId: role === 'student' ? studentId.trim() : '',
-            bio: '',
-            avatar: '',
+            studentId: role === "student" ? String(studentId || "").trim() : "",
+            bio: "",
+            avatar: "",
             createdAt: new Date().toISOString()
         };
 
@@ -493,29 +569,29 @@ const PG = (() => {
         return user;
     }
 
-    // ==================== LEGACY LOGIN ====================
+    // ---------------- LEGACY LOGIN ----------------
 
-    // Kept so existing code does not break.
-    // New login pages should use loginWithBackend().
     function login(email, password) {
+        const cleanEmail = String(email || "").trim().toLowerCase();
+
         const user = getUsers().find(
-            u =>
-                u.email.toLowerCase() === email.trim().toLowerCase() &&
-                u.password === password
+            u => u.email.toLowerCase() === cleanEmail && u.password === password
         );
 
         if (!user) {
             throw new Error(
-                'Invalid email or password. Please sign up first if you do not have an account.'
+                "Invalid email or password. Please sign up first if you do not have an account."
             );
         }
 
+        sessionStorage.removeItem(KEYS.authToken);
+        sessionStorage.removeItem(KEYS.authUser);
         sessionStorage.setItem(KEYS.session, user.id);
 
         return user;
     }
 
-    // ==================== LOGOUT ====================
+    // ---------------- LOGOUT ----------------
 
     function logout() {
         sessionStorage.removeItem(KEYS.session);
@@ -523,26 +599,23 @@ const PG = (() => {
         sessionStorage.removeItem(KEYS.authUser);
     }
 
-    // ==================== USER PROFILE ====================
+    // ---------------- USER PROFILE ----------------
 
     function updateCurrentUser(changes) {
         const current = getCurrentUser();
 
         if (!current) {
-            throw new Error('Please login first.');
+            throw new Error("Please login first.");
         }
 
-        // Backend users should not be silently written into local demo users.
-        if (sessionStorage.getItem(KEYS.authToken)) {
+        if (getAuthToken()) {
             throw new Error(
-                'Profile updates for backend accounts must be saved through the backend API.'
+                "Profile updates for backend accounts must be saved through the backend API."
             );
         }
 
         const users = getUsers().map(user =>
-            user.id === current.id
-                ? { ...user, ...changes }
-                : user
+            user.id === current.id ? { ...user, ...changes } : user
         );
 
         saveUsers(users);
@@ -550,14 +623,14 @@ const PG = (() => {
         return users.find(user => user.id === current.id);
     }
 
-    // ==================== ROLE PROTECTION ====================
+    // ---------------- ROLE PROTECTION ----------------
 
     function requireRole(role) {
         const user = getCurrentUser();
 
         if (!user) {
             window.location.href =
-                '../login.html?next=' +
+                "../login.html?next=" +
                 encodeURIComponent(window.location.pathname);
 
             return null;
@@ -565,9 +638,9 @@ const PG = (() => {
 
         if (user.role !== role) {
             window.location.href =
-                user.role === 'student'
-                    ? '../student/dashboard.html'
-                    : '../instructor/dashboard.html';
+                user.role === "student"
+                    ? "../student/dashboard.html"
+                    : "../instructor/dashboard.html";
 
             return null;
         }
@@ -575,25 +648,22 @@ const PG = (() => {
         return user;
     }
 
-    // ==================== SUBMISSIONS ====================
+    // ---------------- SUBMISSIONS ----------------
 
-    // This remains the original browser-storage submission feature.
-    // Backend submission integration is a separate step.
-    function saveSubmission({ assignmentId, text, filename }) {
+    async function saveSubmission({ assignmentId, text, filename }) {
         const student = getCurrentUser();
 
-        if (!student || student.role !== 'student') {
-            throw new Error('Only students can submit assignments.');
+        if (!student || student.role !== "student") {
+            throw new Error("Only students can submit assignments.");
         }
 
-        if (sessionStorage.getItem(KEYS.authToken)) {
-            throw new Error(
-                'Backend accounts must submit assignments through the submissions API.'
-            );
-        }
-
+        const cleanText = String(text || "").trim();
+        const wordCount = tokenize(cleanText).length;
         const settings = getSettings();
-        const wordCount = tokenize(text).length;
+
+        if (!cleanText) {
+            throw new Error("Please enter your assignment before submitting.");
+        }
 
         if (wordCount < settings.minimumWords) {
             throw new Error(
@@ -601,40 +671,53 @@ const PG = (() => {
             );
         }
 
-        const assignment = getAssignments().find(
-            a => a.id === assignmentId
-        );
+        if (getAuthToken()) {
+            if (!/^[a-f\d]{24}$/i.test(String(assignmentId || ""))) {
+                throw new Error(
+                    "This assignment has no valid MongoDB ID. Load assignments from the backend and select one before submitting."
+                );
+            }
+
+            const result = await apiRequest("/submissions", {
+                method: "POST",
+                body: JSON.stringify({
+                    assignment: assignmentId,
+                    filename: filename || "typed-submission.txt",
+                    text: cleanText
+                })
+            });
+
+            return result.submission || result.data;
+        }
+
+        const assignment = getAssignments().find(a => a.id === assignmentId);
 
         if (!assignment) {
-            throw new Error('Assignment not found.');
+            throw new Error("Assignment not found.");
         }
 
         const submissions = getSubmissions();
 
         const existing = submissions.find(
-            s =>
-                s.assignmentId === assignmentId &&
-                s.studentId === student.id
+            s => s.assignmentId === assignmentId && s.studentId === student.id
         );
 
         const submission = {
-            id: existing?.id || uid('sub'),
+            id: existing?.id || uid("sub"),
             assignmentId,
             studentId: student.id,
             studentName: student.name,
-            filename: filename || 'typed-submission.txt',
-            text: text.trim(),
+            filename: filename || "typed-submission.txt",
+            text: cleanText,
             wordCount,
             submittedAt: new Date().toISOString(),
             marks: existing?.marks ?? null,
-            feedback: existing?.feedback || '',
-            status: existing?.status || 'Submitted'
+            feedback: existing?.feedback || "",
+            status: existing?.status || "Submitted"
         };
 
         const next = existing
-            ? submissions.map(s =>
-                s.id === existing.id ? submission : s
-            )
+            ? submissions.map(s => s.id === existing.id ? submission : s)
             : [submission, ...submissions];
 
         saveSubmissions(next);
@@ -643,7 +726,7 @@ const PG = (() => {
         return getSubmissions().find(s => s.id === submission.id);
     }
 
-    // ==================== SIMILARITY ANALYSIS ====================
+    // ---------------- SIMILARITY ANALYSIS ----------------
 
     function recalculateSimilarities() {
         const settings = getSettings();
@@ -653,14 +736,13 @@ const PG = (() => {
             ...sub,
             maxSimilarity: 0,
             flagged: false,
-            topMatchStudent: '',
-            topMatchSubmissionId: '',
+            topMatchStudent: "",
+            topMatchSubmissionId: "",
             matchingNgrams: []
         }));
 
-        // Compare submissions belonging to different students.
-        for (let i = 0; i < updated.length; i += 1) {
-            for (let j = i + 1; j < updated.length; j += 1) {
+        for (let i = 0; i < updated.length; i++) {
+            for (let j = i + 1; j < updated.length; j++) {
                 if (updated[i].studentId === updated[j].studentId) {
                     continue;
                 }
@@ -688,8 +770,7 @@ const PG = (() => {
         }
 
         updated.forEach(sub => {
-            sub.flagged =
-                sub.maxSimilarity >= settings.similarityThreshold;
+            sub.flagged = sub.maxSimilarity >= settings.similarityThreshold;
         });
 
         saveSubmissions(updated);
@@ -698,9 +779,7 @@ const PG = (() => {
     }
 
     function getStudentSubmissions(studentId) {
-        return getSubmissions().filter(
-            s => s.studentId === studentId
-        );
+        return getSubmissions().filter(s => s.studentId === studentId);
     }
 
     function getInstructorSubmissions() {
@@ -709,20 +788,17 @@ const PG = (() => {
 
     function markSubmission(submissionId, marks, feedback, status) {
         const submissions = getSubmissions();
-
-        const index = submissions.findIndex(
-            s => s.id === submissionId
-        );
+        const index = submissions.findIndex(s => s.id === submissionId);
 
         if (index === -1) {
-            throw new Error('Submission not found.');
+            throw new Error("Submission not found.");
         }
 
         submissions[index] = {
             ...submissions[index],
             marks: Number(marks),
-            feedback: String(feedback || '').trim(),
-            status: status || 'Marked',
+            feedback: String(feedback || "").trim(),
+            status: status || "Marked",
             markedAt: new Date().toISOString()
         };
 
@@ -731,27 +807,19 @@ const PG = (() => {
         return submissions[index];
     }
 
-    // ==================== INITIAL PAGE ====================
+    // ---------------- INITIAL PAGE ----------------
 
     function getInitialPage() {
         const user = getCurrentUser();
 
-        if (!user) {
-            return '../html/index.html';
-        }
+        if (!user) return "../html/index.html";
 
-        if (user.role === 'student') {
-            return '../student/dashboard.html';
-        }
+        if (user.role === "student") return "../student/dashboard.html";
+        if (user.role === "instructor") return "../instructor/dashboard.html";
 
-        if (user.role === 'instructor') {
-            return '../instructor/dashboard.html';
-        }
-
-        return '../html/index.html';
+        return "../html/index.html";
     }
 
-    // Initialize the existing browser-side features.
     init();
 
     return {
@@ -764,6 +832,7 @@ const PG = (() => {
         saveSettings,
         getUsers,
         getAssignments,
+        getBackendAssignments,
         getSubmissions,
         getCurrentUser,
         register,
@@ -774,6 +843,7 @@ const PG = (() => {
         requireRole,
         saveSubmission,
         createAssignment,
+        createBackendAssignment,
         updateAssignment,
         deleteAssignment,
         recalculateSimilarities,

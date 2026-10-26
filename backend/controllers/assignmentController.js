@@ -34,7 +34,7 @@ const getAssignments = async (req, res) => {
 // Create an assignment.
 const createAssignment = async (req, res) => {
   try {
-    const { title, description, dueDate, maxMarks } = req.body;
+    const { title, course, description, dueDate, maxMarks } = req.body;
 
     if (typeof title !== "string" || !title.trim()) {
       return res.status(400).json({
@@ -43,10 +43,29 @@ const createAssignment = async (req, res) => {
       });
     }
 
+    if (typeof course !== "string" || !course.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Course or module is required"
+      });
+    }
+
+    if (
+      description !== undefined &&
+      typeof description !== "string"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Description must be text"
+      });
+    }
+
     if (
       dueDate !== undefined &&
       dueDate !== null &&
-      (typeof dueDate !== "string" || Number.isNaN(Date.parse(dueDate)))
+      dueDate !== "" &&
+      (typeof dueDate !== "string" ||
+        Number.isNaN(Date.parse(dueDate)))
     ) {
       return res.status(400).json({
         success: false,
@@ -68,6 +87,7 @@ const createAssignment = async (req, res) => {
 
     const assignment = await Assignment.create({
       title: title.trim(),
+      course: course.trim(),
       description:
         typeof description === "string" ? description.trim() : "",
       dueDate: dueDate || null,
@@ -120,6 +140,7 @@ const updateAssignment = async (req, res) => {
 
     const allowedFields = [
       "title",
+      "course",
       "description",
       "dueDate",
       "maxMarks"
@@ -155,6 +176,20 @@ const updateAssignment = async (req, res) => {
     }
 
     if (
+      updates.course !== undefined &&
+      (typeof updates.course !== "string" || !updates.course.trim())
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Course or module cannot be empty"
+      });
+    }
+
+    if (updates.course !== undefined) {
+      updates.course = updates.course.trim();
+    }
+
+    if (
       updates.description !== undefined &&
       typeof updates.description !== "string"
     ) {
@@ -164,9 +199,14 @@ const updateAssignment = async (req, res) => {
       });
     }
 
+    if (updates.description !== undefined) {
+      updates.description = updates.description.trim();
+    }
+
     if (
       updates.dueDate !== undefined &&
       updates.dueDate !== null &&
+      updates.dueDate !== "" &&
       (typeof updates.dueDate !== "string" ||
         Number.isNaN(Date.parse(updates.dueDate)))
     ) {
@@ -174,6 +214,10 @@ const updateAssignment = async (req, res) => {
         success: false,
         message: "Please provide a valid due date"
       });
+    }
+
+    if (updates.dueDate === "") {
+      updates.dueDate = null;
     }
 
     if (

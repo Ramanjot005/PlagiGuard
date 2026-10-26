@@ -9,6 +9,12 @@ const assignmentSchema = new mongoose.Schema(
       trim: true
     },
 
+    course: {
+      type: String,
+      required: true,
+      trim: true
+    },
+
     description: {
       type: String,
       default: "",
