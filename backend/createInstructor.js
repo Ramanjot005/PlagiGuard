@@ -1,5 +1,7 @@
-
-require("dotenv").config({ path: require("path").join(__dirname, ".env") });
+javascript
+require("dotenv").config({
+  path: require("path").join(__dirname, ".env")
+});
 
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
@@ -7,6 +9,10 @@ const User = require("./models/User");
 
 async function createInstructor() {
   try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI is missing from backend/.env");
+    }
+
     await mongoose.connect(process.env.MONGODB_URI);
 
     const email = "testinstructor@plagiguard.local";
@@ -20,7 +26,9 @@ async function createInstructor() {
       user.name = "Test Instructor";
       user.passwordHash = passwordHash;
       user.role = "instructor";
+
       await user.save();
+
       console.log("Test instructor updated.");
     } else {
       await User.create({
@@ -29,6 +37,7 @@ async function createInstructor() {
         passwordHash,
         role: "instructor"
       });
+
       console.log("Test instructor created.");
     }
 

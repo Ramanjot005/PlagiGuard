@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 
 const express = require("express");
@@ -8,6 +7,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const assignmentRoutes = require("./routes/assignmentRoutes");
 const submissionRoutes = require("./routes/submissionRoutes");
+const settingsRoutes = require("./routes/settingsRoutes");
 
 const {
   protect,
@@ -33,6 +33,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/submissions", submissionRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Protected test route
 app.get("/api/protected", protect, (req, res) => {

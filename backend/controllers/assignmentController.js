@@ -1,4 +1,4 @@
-
+// javascript
 const mongoose = require("mongoose");
 const Assignment = require("../models/Assignment");
 
@@ -36,17 +36,15 @@ const createAssignment = async (req, res) => {
   try {
     const { title, course, description, dueDate, maxMarks } = req.body;
 
-    if (typeof title !== "string" || !title.trim()) {
+    if (
+      typeof title !== "string" ||
+      !title.trim() ||
+      typeof course !== "string" ||
+      !course.trim()
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Assignment title is required"
-      });
-    }
-
-    if (typeof course !== "string" || !course.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Course or module is required"
+        message: "Assignment title and course are required"
       });
     }
 
@@ -131,7 +129,10 @@ const updateAssignment = async (req, res) => {
       });
     }
 
-    if (assignment.createdBy.toString() !== req.user.id) {
+    if (
+      !assignment.createdBy ||
+      assignment.createdBy.toString() !== req.user.id
+    ) {
       return res.status(403).json({
         success: false,
         message: "You can only update your own assignments"
@@ -163,7 +164,8 @@ const updateAssignment = async (req, res) => {
 
     if (
       updates.title !== undefined &&
-      (typeof updates.title !== "string" || !updates.title.trim())
+      (typeof updates.title !== "string" ||
+        !updates.title.trim())
     ) {
       return res.status(400).json({
         success: false,
@@ -177,11 +179,12 @@ const updateAssignment = async (req, res) => {
 
     if (
       updates.course !== undefined &&
-      (typeof updates.course !== "string" || !updates.course.trim())
+      (typeof updates.course !== "string" ||
+        !updates.course.trim())
     ) {
       return res.status(400).json({
         success: false,
-        message: "Course or module cannot be empty"
+        message: "Course name cannot be empty"
       });
     }
 

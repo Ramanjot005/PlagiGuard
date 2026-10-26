@@ -1,10 +1,12 @@
+javascript
 const mongoose = require("mongoose");
 const Submission = require("../models/Submission");
 const Assignment = require("../models/Assignment");
+const Settings = require("../models/Settings");
 
 const {
-  analyzeSubmission,
-  getPairwiseComparisons
+  getPairwiseComparisons,
+  reanalyzeAllSubmissions
 } = require("../services/similarityService");
 
 // POST /api/submissions
@@ -39,6 +41,17 @@ const createSubmission = async (req, res) => {
     const cleanText = text.trim();
     const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
 
+    // Enforce the configured minimum word count.
+    const settings = await Settings.findOne({ key: "global" }).lean();
+    const minimumWords = settings?.minimumWords ?? 20;
+
+    if (wordCount < minimumWords) {
+      return res.status(400).json({
+        success: false,
+        message: `Your submission has ${wordCount} words. Minimum required words: ${minimumWords}.`
+      });
+    }
+
     const submission = await Submission.create({
       student: req.user.id,
       assignment,
@@ -54,9 +67,20 @@ const createSubmission = async (req, res) => {
     let warning = null;
 
     try {
-      analysis = await analyzeSubmission(submission._id);
+      const analyses = await reanalyzeAllSubmissions();
+
+      analysis = analyses.find(
+        result => String(result.submissionId) === String(submission._id)
+      );
+
+      if (!analysis) {
+        throw new Error(
+          "New submission was not included in similarity analysis"
+        );
+      }
     } catch (error) {
       console.error("Similarity analysis error:", error.message);
+
       warning =
         "Submission saved, but similarity analysis could not be completed.";
     }
@@ -64,7 +88,7 @@ const createSubmission = async (req, res) => {
     const savedSubmission = await Submission.findById(submission._id)
       .select("-text")
       .populate("student", "name email")
-      .populate("assignment", "title dueDate maxMarks");
+      .populate("assignment", "title course dueDate maxMarks");
 
     return res.status(201).json({
       success: true,
@@ -93,7 +117,7 @@ const getMySubmissions = async (req, res) => {
       student: req.user.id
     })
       .select("-text")
-      .populate("assignment", "title dueDate maxMarks")
+      .populate("assignment", "title course dueDate maxMarks")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -119,7 +143,7 @@ const getSubmissionReports = async (req, res) => {
       Submission.find()
         .select("-text")
         .populate("student", "name email")
-        .populate("assignment", "title")
+        .populate("assignment", "title course maxMarks")
         .sort({ createdAt: -1 })
         .lean(),
 
@@ -142,12 +166,12 @@ const getSubmissionReports = async (req, res) => {
   }
 };
 
-// PATCH /api/submissions/:id/grade
-// Save marks, feedback and grading status.
-const gradeSubmission = async (req, res) => {
+// PUT /api/submissions/:id
+// Update submission text or filename.
+const updateSubmission = async (req, res) => {
   try {
     const { id } = req.params;
-    const { marks, feedback } = req.body;
+    const body = req.body || {};
 
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({
@@ -156,14 +180,145 @@ const gradeSubmission = async (req, res) => {
       });
     }
 
+    const submission = await Submission.findById(id);
+
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: "Submission not found"
+      });
+    }
+
+    // Students can update only their own submissions.
     if (
-      marks === undefined ||
-      !Number.isFinite(Number(marks)) ||
-      Number(marks) < 0
+      req.user.role === "student" &&
+      String(submission.student) !== String(req.user.id)
     ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only update your own submission"
+      });
+    }
+
+    // Only students and instructors may use this endpoint.
+    if (!["student", "instructor"].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to update submissions"
+      });
+    }
+
+    const hasText = Object.prototype.hasOwnProperty.call(body, "text");
+    const hasFilename = Object.prototype.hasOwnProperty.call(
+      body,
+      "filename"
+    );
+
+    if (!hasText && !hasFilename) {
       return res.status(400).json({
         success: false,
-        message: "Please provide valid marks"
+        message: "Submission text or filename is required"
+      });
+    }
+
+    if (hasText) {
+      if (typeof body.text !== "string" || !body.text.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Submission text must be a non-empty string"
+        });
+      }
+
+      submission.text = body.text.trim();
+      submission.wordCount = submission.text
+        .split(/\s+/)
+        .filter(Boolean).length;
+    }
+
+    if (hasFilename) {
+      if (
+        typeof body.filename !== "string" ||
+        !body.filename.trim()
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Filename must be a non-empty string"
+        });
+      }
+
+      submission.filename = body.filename.trim();
+    }
+
+    await submission.save();
+
+    let analysis;
+
+    if (hasText) {
+      try {
+        const analyses = await reanalyzeAllSubmissions();
+
+        analysis = analyses.find(
+          result => String(result.submissionId) === String(submission._id)
+        );
+
+        if (!analysis) {
+          throw new Error(
+            "Updated submission was not included in similarity analysis"
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Similarity analysis error after submission update:",
+          error.message
+        );
+
+        return res.status(500).json({
+          success: false,
+          message: "Submission was updated, but similarity analysis failed",
+          submissionId: submission._id
+        });
+      }
+    }
+
+    const savedSubmission = await Submission.findById(submission._id)
+      .select("-text")
+      .populate("student", "name email")
+      .populate("assignment", "title course dueDate maxMarks");
+
+    return res.status(200).json({
+      success: true,
+      message: "Submission updated successfully",
+      submission: savedSubmission,
+      ...(analysis ? { analysis } : {})
+    });
+  } catch (error) {
+    console.error("Update submission error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Submission update failed"
+    });
+  }
+};
+
+// PATCH /api/submissions/:id/grade
+// Save marks, feedback and grading status.
+const gradeSubmission = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { marks, feedback, status } = req.body;
+
+    if (req.user.role !== "instructor") {
+      return res.status(403).json({
+        success: false,
+        message: "Only instructors can grade submissions"
+      });
+    }
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid submission ID"
       });
     }
 
@@ -179,21 +334,73 @@ const gradeSubmission = async (req, res) => {
       });
     }
 
-    if (
-      submission.assignment &&
-      submission.assignment.maxMarks != null &&
-      Number(marks) > submission.assignment.maxMarks
-    ) {
-      return res.status(400).json({
+    if (!submission.assignment) {
+      return res.status(404).json({
         success: false,
-        message: `Marks cannot exceed ${submission.assignment.maxMarks}`
+        message: "Associated assignment not found"
       });
     }
 
-    // Save marks and feedback only if the model supports these fields.
-    submission.set("marks", Number(marks));
-    submission.set("feedback", String(feedback || "").trim());
-    submission.status = "graded";
+    if (
+      String(submission.assignment.createdBy) !== String(req.user.id)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only grade submissions for your own assignments"
+      });
+    }
+
+    if (
+      marks === undefined ||
+      marks === null ||
+      typeof marks !== "number" ||
+      !Number.isFinite(marks) ||
+      marks < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Marks must be a valid non-negative number"
+      });
+    }
+
+    const maxMarks = submission.assignment.maxMarks ?? 100;
+
+    if (marks > maxMarks) {
+      return res.status(400).json({
+        success: false,
+        message: `Marks cannot exceed maximum marks (${maxMarks})`
+      });
+    }
+
+    if (feedback !== undefined && typeof feedback !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Feedback must be text"
+      });
+    }
+
+    const allowedStatuses = [
+      "submitted",
+      "flagged",
+      "graded",
+      "Marked",
+      "Needs Revision",
+      "Approved"
+    ];
+
+    if (status !== undefined && !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed statuses are: ${allowedStatuses.join(", ")}`
+      });
+    }
+
+    submission.set("marks", marks);
+    submission.set(
+      "feedback",
+      typeof feedback === "string" ? feedback.trim() : ""
+    );
+    submission.status = status || "graded";
 
     await submission.save();
 
@@ -216,5 +423,7 @@ module.exports = {
   createSubmission,
   getMySubmissions,
   getSubmissionReports,
-  gradeSubmission
+  gradeSubmission,
+  updateSubmission
+
 };

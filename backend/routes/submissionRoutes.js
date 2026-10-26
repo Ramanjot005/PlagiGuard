@@ -1,4 +1,3 @@
-
 const express = require("express");
 const mongoose = require("mongoose");
 
@@ -6,21 +5,23 @@ const {
   createSubmission,
   getMySubmissions,
   getSubmissionReports,
-  gradeSubmission
+  gradeSubmission,
+  updateSubmission
 } = require("../controllers/submissionController");
-
 const {
   protect,
   authorizeRoles
 } = require("../middleware/authMiddleware");
-
+const Assignment = require("../models/Assignment");
 const Submission = require("../models/Submission");
-const { analyzeSubmission } = require("../services/similarityService");
+const {
+  analyzeSubmission,
+  getPairwiseComparisons
+} = require("../services/similarityService");
 
 const router = express.Router();
 
-// Student submits an assignment.
-// The controller must validate the logged-in student's identity.
+// Student submits an assignment
 router.post(
   "/",
   protect,
@@ -28,7 +29,7 @@ router.post(
   createSubmission
 );
 
-// Student views their own submissions.
+// Student views their own submissions
 router.get(
   "/my",
   protect,
@@ -36,7 +37,7 @@ router.get(
   getMySubmissions
 );
 
-// Instructor views submission reports.
+// Instructor views submission reports
 router.get(
   "/reports",
   protect,
@@ -44,7 +45,31 @@ router.get(
   getSubmissionReports
 );
 
-// Instructor grades a submission.
+// Instructor views pairwise similarity reports
+router.get(
+  "/reports/pairwise",
+  protect,
+  authorizeRoles("instructor"),
+  async (req, res) => {
+    try {
+      const comparisons = await getPairwiseComparisons();
+
+      return res.status(200).json({
+        success: true,
+        count: comparisons.length,
+        comparisons
+      });
+    } catch (error) {
+      console.error("Pairwise similarity report failed:", error.message);
+      return res.status(500).json({
+        success: false,
+        message: "Unable to generate similarity report"
+      });
+    }
+  }
+);
+
+// Instructor grades a submission
 router.patch(
   "/:id/grade",
   protect,
@@ -52,7 +77,7 @@ router.patch(
   gradeSubmission
 );
 
-// Instructor views submissions for a particular assignment.
+// Instructor views submissions for one assignment
 router.get(
   "/assignment/:assignmentId",
   protect,
@@ -68,12 +93,21 @@ router.get(
         });
       }
 
+      const assignment = await Assignment.findById(assignmentId).select("_id");
+
+      if (!assignment) {
+        return res.status(404).json({
+          success: false,
+          message: "Assignment not found"
+        });
+      }
+
       const submissions = await Submission.find({
         assignment: assignmentId
       })
         .select("-text")
         .populate("student", "name email")
-        .sort({ createdAt: -1 });
+        .sort({ submittedAt: -1 });
 
       return res.status(200).json({
         success: true,
@@ -90,8 +124,10 @@ router.get(
   }
 );
 
-// Fetch one submission and its analysis.
-// Students may only access their own submission.
+router.patch("/:id", protect, updateSubmission);
+
+// Fetch one submission
+// Students can only access their own submission
 router.get("/:id", protect, async (req, res) => {
   try {
     const { id } = req.params;
@@ -105,7 +141,7 @@ router.get("/:id", protect, async (req, res) => {
 
     const submission = await Submission.findById(id)
       .populate("student", "name email")
-      .populate("assignment", "title");
+      .populate("assignment", "title course maxMarks");
 
     if (!submission) {
       return res.status(404).json({
@@ -114,9 +150,15 @@ router.get("/:id", protect, async (req, res) => {
       });
     }
 
+    const studentId = String(
+      submission.student?._id || submission.student
+    );
+
+    const currentUserId = String(req.user.id || req.user._id);
+
     if (
       req.user.role === "student" &&
-      submission.student._id.toString() !== req.user.id
+      studentId !== currentUserId
     ) {
       return res.status(403).json({
         success: false,
@@ -127,11 +169,7 @@ router.get("/:id", protect, async (req, res) => {
     let analysis = null;
 
     if (req.user.role === "instructor") {
-      try {
-        analysis = await analyzeSubmission(submission._id);
-      } catch (error) {
-        console.error("Analysis retrieval failed:", error.message);
-      }
+      analysis = await analyzeSubmission(submission._id);
     }
 
     return res.status(200).json({

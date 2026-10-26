@@ -1,15 +1,15 @@
 
 const mongoose = require("mongoose");
 
-const connectDB = async () => {
+const connectDB = async (options = {}) => {
   try {
-    const mongoURI = process.env.MONGODB_URI;
+    const mongoURI = process.env.MONGODB_URI || process.env.MONGO_URI;
 
     if (!mongoURI) {
-      throw new Error("MONGODB_URI is missing from the .env file");
+      throw new Error("MONGODB_URI or MONGO_URI is missing from the .env file");
     }
 
-    await mongoose.connect(mongoURI);
+    await mongoose.connect(mongoURI, options);
 
     console.log("MongoDB connected successfully");
   } catch (error) {

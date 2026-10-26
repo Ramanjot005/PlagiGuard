@@ -1,4 +1,3 @@
-
 const express = require("express");
 const mongoose = require("mongoose");
 
@@ -7,20 +6,16 @@ const {
   createAssignment,
   updateAssignment
 } = require("../controllers/assignmentController");
-
 const {
   protect,
   authorizeRoles
 } = require("../middleware/authMiddleware");
-
 const Assignment = require("../models/Assignment");
 
 const router = express.Router();
 
-// Get all assignments — authenticated users
 router.get("/", protect, getAssignments);
 
-// Create assignment — instructors only
 router.post(
   "/",
   protect,
@@ -28,7 +23,6 @@ router.post(
   createAssignment
 );
 
-// Update assignment — instructors only
 router.put(
   "/:id",
   protect,
@@ -36,7 +30,6 @@ router.put(
   updateAssignment
 );
 
-// Get one assignment — authenticated users
 router.get("/:id", protect, async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {

@@ -1,10 +1,36 @@
 const instructor = PG.requireRole('instructor');
 if (!instructor) throw new Error('Unauthorized');
 
-function renderInstructorDashboard() {
-    const submissions = PG.getInstructorSubmissions();
-    const students = PG.getUsers().filter(u => u.role === 'student');
-    const assignments = PG.getAssignments();
+async function renderInstructorDashboard() {
+    let submissions = [];
+    let students = PG.getUsers().filter(u => u.role === 'student');
+    let assignments = [];
+
+    if (PG.getAuthToken()) {
+        try {
+            const results = await Promise.all([
+                PG.fetchAssignments(),
+                PG.fetchInstructorReports()
+            ]);
+            assignments = results[0] || [];
+            submissions = (results[1] || []).map(s => ({
+                ...s,
+                id: String(s._id || s.id),
+                assignmentId: String(s.assignment?._id || s.assignment || s.assignmentId || ''),
+                submittedAt: s.createdAt || s.submittedAt || new Date().toISOString(),
+                maxSimilarity: Number(s.maxSimilarity ?? s.analysis?.maxSimilarity ?? 0),
+                flagged: s.status === 'flagged' || s.flagged,
+                marks: s.marks
+            }));
+        } catch (e) {
+            console.error('Failed to load instructor dashboard data:', e);
+            assignments = PG.getAssignments();
+            submissions = PG.getInstructorSubmissions();
+        }
+    } else {
+        assignments = PG.getAssignments();
+        submissions = PG.getInstructorSubmissions();
+    }
     const flagged = submissions.filter(s => s.flagged);
     const marked = submissions.filter(s => s.marks !== null && s.marks !== undefined);
     const average = marked.length ? marked.reduce((sum, s) => sum + Number(s.marks), 0) / marked.length : 0;

@@ -140,10 +140,39 @@ function openPairReport(submission) {
     });
 }
 
-function renderReports() {
+async function renderReports() {
     const settings = PG.getSettings();
-    const submissions = PG.getInstructorSubmissions().sort((a,b)=>(Number(b.maxSimilarity)||0)-(Number(a.maxSimilarity)||0));
-    const assignments = PG.getAssignments();
+    let submissions = [];
+    let assignments = [];
+
+    if (PG.getAuthToken()) {
+        try {
+            const results = await Promise.all([
+                PG.fetchAssignments(),
+                PG.fetchInstructorReports()
+            ]);
+            assignments = results[0] || [];
+            submissions = (results[1] || []).map(s => ({
+                ...s,
+                id: String(s._id || s.id),
+                assignmentId: String(s.assignment?._id || s.assignment || s.assignmentId || ''),
+                studentName: s.student?.name || s.studentName || 'Student',
+                studentId: String(s.student?._id || s.student || s.studentId || ''),
+                submittedAt: s.createdAt || s.submittedAt || new Date().toISOString(),
+                maxSimilarity: Number(s.maxSimilarity ?? s.analysis?.maxSimilarity ?? 0),
+                flagged: s.status === 'flagged' || s.flagged,
+                topMatchStudent: s.topMatch?.student?.name || s.topMatchStudent || '',
+                matchingNgrams: s.matchingNGrams || s.matchingNgrams || []
+            })).sort((a,b)=>(Number(b.maxSimilarity)||0)-(Number(a.maxSimilarity)||0));
+        } catch (e) {
+            console.error('Failed to load instructor reports data:', e);
+            submissions = PG.getInstructorSubmissions().sort((a,b)=>(Number(b.maxSimilarity)||0)-(Number(a.maxSimilarity)||0));
+            assignments = PG.getAssignments();
+        }
+    } else {
+        submissions = PG.getInstructorSubmissions().sort((a,b)=>(Number(b.maxSimilarity)||0)-(Number(a.maxSimilarity)||0));
+        assignments = PG.getAssignments();
+    }
     const flagged = submissions.filter(s=>s.flagged);
     const compared = submissions.filter(s=>s.topMatchStudent);
     const average = compared.length ? compared.reduce((sum,s)=>sum+(Number(s.maxSimilarity)||0),0)/compared.length : 0;
@@ -161,7 +190,7 @@ function renderReports() {
         <section class="report-stat-grid report-stat-grid-top"><div class="report-stat report-stat-primary"><span>Average similarity</span><strong>${compared.length?average.toFixed(1)+'%':'—'}</strong><small>Across comparable submissions</small></div><div class="report-stat"><span>Flagged</span><strong>${flagged.length}</strong><small>At or above ${settings.similarityThreshold}%</small></div><div class="report-stat"><span>Highest similarity</span><strong>${highest&&highest.topMatchStudent?(Number(highest.maxSimilarity)||0).toFixed(1)+'%':'—'}</strong><small>${highest?.topMatchStudent?PG.escapeHtml(highest.topMatchStudent):'No comparisons yet'}</small></div><div class="report-stat"><span>Pair method</span><strong>${settings.ngramSize}-gram</strong><small>Jaccard similarity</small></div></section>
         <section class="report-grid professional-report-layout">
           <div class="section-card report-heatmap-card"><div class="report-section-heading"><div><span class="eyebrow">MATRIX</span><h2 class="section-title">Similarity map</h2><p class="text-muted">Use the matrix to spot clusters of high overlap before opening an individual report.</p></div><div class="heatmap-legend"><span class="legend low"></span>Low <span class="legend med"></span>Review <span class="legend high"></span>High</div></div>${submissions.length>1?buildHeatmapRows(submissions):'<div class="report-empty-state">Submit work from at least two students to populate the pairwise matrix.</div>'}</div>
-          <aside class="section-card flagged-inbox"><div class="report-section-heading"><div><span class="eyebrow">PRIORITY QUEUE</span><h2 class="section-title">Flagged submissions</h2><p class="text-muted">Highest similarity appears first.</p></div><span class="report-chip">${flagged.length}</span></div><div class="priority-list">${flagged.map((s,i)=>{const a=assignments.find(x=>x.id===s.assignmentId);return `<article class="priority-item"><div class="priority-rank">${String(i+1).padStart(2,'0')}</div><div class="priority-main"><strong>${PG.escapeHtml(s.studentName)}</strong><span>${s.topMatchStudent?`↔ ${PG.escapeHtml(s.topMatchStudent)}`:'No pair'} · ${PG.escapeHtml(a?.title||'Assignment')}</span><small>${s.matchingNgrams?.length||0} shared n-grams · ${PG.formatDate(s.submittedAt)}</small></div><div class="priority-score">${(Number(s.maxSimilarity)||0).toFixed(1)}%</div><button class="btn btn-secondary btn-sm priority-open" data-id="${s.id}">Open</button></article>`;}).join('') || '<div class="report-empty-state">No flagged submissions at the current threshold.</div>'}</div></aside>
+          <aside class="section-card flagged-inbox"><div class="report-section-heading"><div><span class="eyebrow">PRIORITY QUEUE</span><h2 class="section-title">Flagged submissions</h2><p class="text-muted">Highest similarity appears first.</p></div><span class="report-chip">${flagged.length}</span></div><div class="priority-list">${flagged.map((s,i)=>{const a=assignments.find(x=>String(x._id||x.id)===s.assignmentId)||s.assignment;return `<article class="priority-item"><div class="priority-rank">${String(i+1).padStart(2,'0')}</div><div class="priority-main"><strong>${PG.escapeHtml(s.studentName)}</strong><span>${s.topMatchStudent?`↔ ${PG.escapeHtml(s.topMatchStudent)}`:'No pair'} · ${PG.escapeHtml(a?.title||'Assignment')}</span><small>${s.matchingNgrams?.length||0} shared n-grams · ${PG.formatDate(s.submittedAt)}</small></div><div class="priority-score">${(Number(s.maxSimilarity)||0).toFixed(1)}%</div><button class="btn btn-secondary btn-sm priority-open" data-id="${s.id}">Open</button></article>`;}).join('') || '<div class="report-empty-state">No flagged submissions at the current threshold.</div>'}</div></aside>
         </section>
         <section class="section-card report-all-card"><div class="report-section-heading"><div><span class="eyebrow">ALL REPORTS</span><h2 class="section-title">Submission report list</h2><p class="text-muted">Open any submission to inspect its similarity evidence.</p></div><div class="report-tools"><input id="report-search" class="form-input search-input" type="search" placeholder="Search student or assignment..." aria-label="Search reports"><div class="report-filter-tabs"><button class="active" data-filter="all">All</button><button data-filter="flagged">Flagged</button><button data-filter="clear">Below threshold</button></div></div><div class="report-table-wrap"><table class="report-table"><thead><tr><th>Student</th><th>Assignment</th><th>Similarity</th><th>Top match</th><th>Status</th><th>Marks</th><th></th></tr></thead><tbody>${submissions.map(s=>{const a=assignments.find(x=>x.id===s.assignmentId);const sim=Number(s.maxSimilarity)||0;const state=s.flagged?'flagged':s.topMatchStudent?'clear':'pending';return `<tr data-filter-state="${state}" data-report-search="${PG.escapeHtml(`${s.studentName} ${a?.title || ''} ${s.status || ''}`.toLowerCase())}"><td><strong>${PG.escapeHtml(s.studentName)}</strong><span>${PG.escapeHtml(PG.getUsers().find(u=>u.id===s.studentId)?.studentId||'')}</span></td><td>${PG.escapeHtml(a?.title||'Unknown')}</td><td><strong class="score-${toneFor(sim)}">${sim.toFixed(1)}%</strong><div class="report-table-bar"><span class="${toneFor(sim)}" style="width:${Math.min(sim,100)}%"></span></div></td><td>${s.topMatchStudent?PG.escapeHtml(s.topMatchStudent):'—'}</td><td>${s.flagged?'<span class="report-status flagged">Flagged</span>':s.topMatchStudent?'<span class="report-status clear">Not flagged</span>':'<span class="report-status pending">Awaiting</span>'}</td><td>${s.marks!==null&&s.marks!==undefined?`${s.marks}/${a?.maxMarks??10}`:'Pending'}</td><td>${s.topMatchStudent?`<button class="btn btn-primary btn-sm report-pair-open" data-id="${s.id}">View report</button>`:'<span class="table-sub">No pair yet</span>'}</td></tr>`;}).join('') || '<tr><td colspan="7" class="report-empty-table">No submissions yet.</td></tr>'}</tbody></table></div></section>`
     });

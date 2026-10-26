@@ -1,4 +1,3 @@
-
 const Submission = require("../models/Submission");
 const Settings = require("../models/Settings");
 
@@ -42,13 +41,30 @@ async function getAnalysisSettings() {
         key: "global"
     }).lean();
 
-    return {
+    const analysisSettings = {
         ngramSize: settings?.ngramSize ?? 3,
         similarityThreshold:
             settings?.similarityThreshold ?? 30,
         minimumMatchingNGrams:
-            settings?.minimumMatchingNGrams ?? 3
+            settings?.minimumMatchingNGrams ?? 3,
+        minimumWords:
+            settings?.minimumWords ?? 20
     };
+
+    if (
+        !Number.isInteger(analysisSettings.ngramSize) ||
+        analysisSettings.ngramSize < 1 ||
+        analysisSettings.ngramSize > 10 ||
+        !Number.isFinite(analysisSettings.similarityThreshold) ||
+        analysisSettings.similarityThreshold < 0 ||
+        analysisSettings.similarityThreshold > 100 ||
+        !Number.isInteger(analysisSettings.minimumMatchingNGrams) ||
+        analysisSettings.minimumMatchingNGrams < 1
+    ) {
+        throw new Error("Invalid similarity analysis settings");
+    }
+
+    return analysisSettings;
 }
 
 async function analyzeSubmission(submissionId) {
@@ -61,19 +77,16 @@ async function analyzeSubmission(submissionId) {
     const settings = await getAnalysisSettings();
     const n = settings.ngramSize;
 
-    if (!Number.isInteger(n) || n < 1 || n > 10) {
-        throw new Error("Invalid n-gram size");
-    }
-
     const currentGrams = createNGrams(
         tokenize(current.text),
         n
     );
 
+    // Only compare against submissions belonging to different students
     const others = await Submission.find({
         _id: { $ne: current._id },
         student: { $ne: current.student }
-    }).select("_id student text");
+    }).select("_id student text maxSimilarity status");
 
     let bestMatch = null;
     let bestScore = 0;
@@ -94,6 +107,36 @@ async function analyzeSubmission(submissionId) {
             bestScore = result.score;
             bestMatch = other;
             bestNGrams = result.matchingNGrams;
+        }
+
+        // Bidirectional update: if this current submission is a stronger match for the other submission, update it
+        const otherMaxSim = other.maxSimilarity ?? 0;
+        if (result.score > otherMaxSim) {
+            const otherFlagged =
+                result.score >= settings.similarityThreshold &&
+                result.matchingNGrams.length >= settings.minimumMatchingNGrams;
+
+            const otherUpdates = {
+                maxSimilarity: result.score,
+                flagged: otherFlagged,
+                topMatch: {
+                    submission: current._id,
+                    student: current.student,
+                    similarity: result.score
+                },
+                matchingNGrams: result.matchingNGrams,
+                analysis: {
+                    ngramSize: n,
+                    analyzedAt: new Date()
+                }
+            };
+
+            const nonGradedStatuses = ["submitted", "flagged"];
+            if (nonGradedStatuses.includes(other.status)) {
+                otherUpdates.status = otherFlagged ? "flagged" : "submitted";
+            }
+
+            await Submission.findByIdAndUpdate(other._id, { $set: otherUpdates });
         }
     }
 
@@ -117,7 +160,8 @@ async function analyzeSubmission(submissionId) {
         analyzedAt: new Date()
     };
 
-    if (current.status !== "graded") {
+    const nonGradedStatuses = ["submitted", "flagged"];
+    if (nonGradedStatuses.includes(current.status)) {
         current.status = flagged ? "flagged" : "submitted";
     }
 
@@ -171,7 +215,10 @@ async function getPairwiseComparisons() {
                 assignment1: first.assignment,
                 assignment2: second.assignment,
                 similarity: result.score,
-                matchingNGrams: result.matchingNGrams
+                matchingNGrams: result.matchingNGrams,
+                flagged:
+                    result.score >= settings.similarityThreshold &&
+                    result.matchingNGrams.length >= settings.minimumMatchingNGrams
             });
         }
     }
