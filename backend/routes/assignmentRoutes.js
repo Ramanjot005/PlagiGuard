@@ -4,7 +4,8 @@ const mongoose = require("mongoose");
 const {
   getAssignments,
   createAssignment,
-  updateAssignment
+  updateAssignment,
+  deleteAssignment
 } = require("../controllers/assignmentController");
 const {
   protect,
@@ -21,6 +22,14 @@ router.post(
   protect,
   authorizeRoles("instructor"),
   createAssignment
+);
+
+
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("instructor"),
+  deleteAssignment
 );
 
 router.put(

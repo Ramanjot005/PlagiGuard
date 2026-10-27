@@ -1,4 +1,4 @@
-javascript
+// javascript
 const mongoose = require("mongoose");
 
 const assignmentSchema = new mongoose.Schema(
@@ -31,6 +31,12 @@ const assignmentSchema = new mongoose.Schema(
       type: Number,
       default: 100,
       min: 1
+    },
+    minWords: {
+      type: Number,
+      default: null,
+      min: 5,
+      max: 5000
     }
   },
   {

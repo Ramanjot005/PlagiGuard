@@ -315,16 +315,9 @@
                 if (marks === null) return;
 
                 try {
-                    if (isBackend && course.trim() !== (assignment.course || "").trim()) {
-                        showToast(
-                            "Course changes are not supported by the current backend API.",
-                            "error"
-                        );
-                        return;
-                    }
-
                     await PG.updateAssignment(assignment._id || assignment.id, {
                         title: title.trim(),
+                        course: course.trim(),
                         description: description.trim(),
                         dueDate: dueDate.trim(),
                         maxMarks: Number(marks)

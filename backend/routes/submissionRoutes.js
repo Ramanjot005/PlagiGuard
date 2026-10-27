@@ -52,7 +52,9 @@ router.get(
   authorizeRoles("instructor"),
   async (req, res) => {
     try {
-      const comparisons = await getPairwiseComparisons();
+      const myAssignments = await Assignment.find({ createdBy: req.user.id }).select("_id").lean();
+      const assignmentIds = myAssignments.map(a => a._id);
+      const comparisons = await getPairwiseComparisons(assignmentIds);
 
       return res.status(200).json({
         success: true,
@@ -93,12 +95,19 @@ router.get(
         });
       }
 
-      const assignment = await Assignment.findById(assignmentId).select("_id");
+      const assignment = await Assignment.findById(assignmentId);
 
       if (!assignment) {
         return res.status(404).json({
           success: false,
           message: "Assignment not found"
+        });
+      }
+
+      if (!assignment.createdBy || assignment.createdBy.toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only view submissions for your own assignments"
         });
       }
 
@@ -141,7 +150,7 @@ router.get("/:id", protect, async (req, res) => {
 
     const submission = await Submission.findById(id)
       .populate("student", "name email")
-      .populate("assignment", "title course maxMarks");
+      .populate("assignment", "title course maxMarks createdBy");
 
     if (!submission) {
       return res.status(404).json({
@@ -164,6 +173,18 @@ router.get("/:id", protect, async (req, res) => {
         success: false,
         message: "You can only view your own submission"
       });
+    }
+
+        if (req.user.role === "instructor") {
+      const asgOwner = String(
+        submission.assignment?.createdBy?._id || submission.assignment?.createdBy || ""
+      );
+      if (asgOwner && asgOwner !== currentUserId) {
+        return res.status(403).json({
+          success: false,
+          message: "You can only view submissions for your own assignments"
+        });
+      }
     }
 
     let analysis = null;

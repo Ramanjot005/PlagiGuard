@@ -1,4 +1,4 @@
-javascript
+// javascript
 const mongoose = require("mongoose");
 
 const submissionSchema = new mongoose.Schema(

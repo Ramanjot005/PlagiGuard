@@ -7,11 +7,17 @@
 
     let assignments = [];
     const backendMode = Boolean(PG.getAuthToken());
+    let activeSettings = PG.getSettings();
 
     try {
-        assignments = backendMode
-            ? await PG.getBackendAssignments()
-            : PG.getAssignments();
+        if (backendMode) {
+            [assignments, activeSettings] = await Promise.all([
+                PG.getBackendAssignments(),
+                PG.fetchSettingsAPI().catch(() => PG.getSettings())
+            ]);
+        } else {
+            assignments = PG.getAssignments();
+        }
     } catch (error) {
         console.error("Unable to load assignments:", error);
         assignments = [];
@@ -104,12 +110,12 @@
                         </div>
 
                         <div class="upload-rule">
-                            <strong>
-                                Minimum words: ${PG.getSettings().minimumWords}
+                            <strong id="min-words-rule">
+                                Minimum words: ${activeSettings?.minimumWords ?? PG.getSettings().minimumWords}
                             </strong>
 
-                            <span>
-                                Plagiarism check: ${PG.getSettings().ngramSize}-gram + Jaccard
+                            <span id="similarity-rule">
+                                Plagiarism check: ${activeSettings?.ngramSize ?? PG.getSettings().ngramSize}-gram + Jaccard
                             </span>
                         </div>
 
@@ -144,6 +150,18 @@
     const errorBox = document.getElementById(errorBoxId);
     const submitButton = form.querySelector('button[type="submit"]');
     const latestBox = document.getElementById("latest-box");
+    let currentSubmission = null;
+
+    function updateWordRule() {
+        const asgId = String(assignmentSelect.value || "");
+        const asg = assignments.find(a => String(a._id || a.id) === asgId);
+        const minWords = asg?.minWords ?? activeSettings?.minimumWords ?? 20;
+        const ruleEl = document.getElementById("min-words-rule");
+        if (ruleEl) {
+            ruleEl.textContent = `Minimum words: ${minWords}`;
+        }
+        return minWords;
+    }
 
     function updateWordCount() {
         const count = PG.tokenize(textArea.value).length;
@@ -235,6 +253,8 @@
 
     async function showLatest() {
         const assignmentId = String(assignmentSelect.value || "");
+        const minWords = updateWordRule();
+        currentSubmission = null;
 
         if (!assignmentId) {
             latestBox.innerHTML = `
@@ -242,6 +262,8 @@
                     <p>Please select an assignment first.</p>
                 </div>
             `;
+            submitButton.disabled = assignments.length === 0;
+            submitButton.textContent = "Submit & Analyze";
             return;
         }
 
@@ -250,7 +272,9 @@
                 s => String(s.assignmentId) === assignmentId
             );
 
+            currentSubmission = submission || null;
             renderSubmission(submission);
+            submitButton.textContent = currentSubmission ? "Update Submission" : "Submit & Analyze";
             return;
         }
 
@@ -271,7 +295,35 @@
                 s => getSubmissionAssignmentId(s) === assignmentId
             );
 
+            currentSubmission = submission || null;
             renderSubmission(submission);
+
+            if (submission) {
+                const isGraded = submission.marks !== null && submission.marks !== undefined;
+                if (isGraded) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = "Already Graded (Read-Only)";
+                } else {
+                    submitButton.disabled = false;
+                    submitButton.textContent = "Update Submission";
+                }
+
+                // If text area is currently empty, load the full submission text from backend
+                if (!textArea.value.trim() && submission._id) {
+                    try {
+                        const full = await PG.apiRequest(`/submissions/${encodeURIComponent(submission._id)}`);
+                        if (full.submission?.text && !textArea.value.trim()) {
+                            textArea.value = full.submission.text;
+                            updateWordCount();
+                        }
+                    } catch (e) {
+                        // ignore pre-fill error
+                    }
+                }
+            } else {
+                submitButton.disabled = false;
+                submitButton.textContent = "Submit & Analyze";
+            }
         } catch (error) {
             console.error("Unable to load your submissions:", error);
 
@@ -284,6 +336,8 @@
                     </p>
                 </div>
             `;
+            submitButton.disabled = false;
+            submitButton.textContent = "Submit & Analyze";
         }
     }
 
@@ -323,18 +377,30 @@
             return;
         }
 
+        const minWords = updateWordRule();
+        const wordCount = PG.tokenize(textArea.value).length;
+
+        if (wordCount < minWords) {
+            errorBox.textContent =
+                `Your submission has ${wordCount} words. Minimum required words: ${minWords}.`;
+            return;
+        }
+
+        const isUpdating = Boolean(currentSubmission && (currentSubmission._id || currentSubmission.id));
         submitButton.disabled = true;
-        submitButton.textContent = "Submitting...";
+        submitButton.textContent = isUpdating ? "Updating..." : "Submitting...";
 
         try {
+            const submissionId = isUpdating ? (currentSubmission._id || currentSubmission.id) : null;
             const saved = await PG.saveSubmission({
                 assignmentId: assignmentSelect.value,
                 text: textArea.value,
                 filename: fileInput.files[0]?.name ||
-                    "typed-submission.txt"
+                    (currentSubmission?.filename || "typed-submission.txt"),
+                submissionId
             });
 
-            showToast("Assignment submitted successfully.", "success");
+            showToast(isUpdating ? "Submission updated and re-analyzed." : "Assignment submitted successfully.", "success");
 
             if (saved && saved.text) {
                 textArea.value = saved.text;
@@ -354,8 +420,10 @@
                 error.message ||
                 "Submission failed. Please try again.";
         } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = "Submit & Analyze";
+            submitButton.disabled = Boolean(currentSubmission && currentSubmission.marks !== null && currentSubmission.marks !== undefined);
+            submitButton.textContent = currentSubmission
+                ? (currentSubmission.marks !== null && currentSubmission.marks !== undefined ? "Already Graded (Read-Only)" : "Update Submission")
+                : "Submit & Analyze";
         }
     });
 

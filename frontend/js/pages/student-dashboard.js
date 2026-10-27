@@ -43,7 +43,7 @@ async function renderStudentDashboard() {
     const avg = marked.length ? marked.reduce((sum, s) => sum + Number(s.marks), 0) / marked.length : 0;
     const flagged = submissions.filter(s => s.flagged).length;
     const completedPct = assignments.length ? Math.round((submissions.length / assignments.length) * 100) : 0;
-    const pending = assignments.filter(a => !submissions.some(s => s.assignmentId === a.id)).sort((a,b) => new Date(a.dueDate)-new Date(b.dueDate)).slice(0, 4);
+    const pending = assignments.filter(a => !submissions.some(s => String(s.assignmentId) === String(a.id || a._id))).sort((a,b) => new Date(a.dueDate)-new Date(b.dueDate)).slice(0, 4);
     const recent = [...submissions].sort((a,b) => new Date(b.submittedAt)-new Date(a.submittedAt)).slice(0, 5);
     const chartItems = [...submissions].sort((a,b)=>new Date(a.submittedAt)-new Date(b.submittedAt)).slice(-7);
     const chartMax = Math.max(100, ...chartItems.map(s => Number(s.maxSimilarity) || 0));
@@ -94,7 +94,7 @@ async function renderStudentDashboard() {
                 <section class="section-card">
                     <div class="section-heading"><div><span class="eyebrow">RECENT</span><h2 class="section-title">Latest results</h2><p class="text-muted">Your most recent activity.</p></div><a class="btn btn-secondary btn-sm" href="results.html">View results</a></div>
                     <div class="activity-list">
-                        ${recent.length ? recent.map(s => { const a = assignments.find(x => x.id === s.assignmentId); return `<article class="activity-item"><div class="activity-dot ${s.flagged?'dot-danger':'dot-safe'}"></div><div class="activity-main"><strong>${PG.escapeHtml(a?.title || 'Assignment')}</strong><small>${PG.escapeHtml(PG.formatDate(s.submittedAt))} · ${Number(s.maxSimilarity||0).toFixed(1)}% similarity</small></div><div>${plagiarismStatusBadge(s)}</div></article>`; }).join('') : '<div class="empty-state"><div>◎</div><strong>No results yet</strong><p>Submit work to start building your results history.</p></div>'}
+                        ${recent.length ? recent.map(s => { const a = assignments.find(x => String(x.id || x._id) === String(s.assignmentId)); return `<article class="activity-item"><div class="activity-dot ${s.flagged?'dot-danger':'dot-safe'}"></div><div class="activity-main"><strong>${PG.escapeHtml(a?.title || 'Assignment')}</strong><small>${PG.escapeHtml(PG.formatDate(s.submittedAt))} · ${Number(s.maxSimilarity||0).toFixed(1)}% similarity</small></div><div>${plagiarismStatusBadge(s)}</div></article>`; }).join('') : '<div class="empty-state"><div>◎</div><strong>No results yet</strong><p>Submit work to start building your results history.</p></div>'}
                     </div>
                 </section>
             </div>

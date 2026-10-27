@@ -80,6 +80,23 @@ app.use((req, res) => {
   });
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid JSON payload received'
+    });
+  }
+
+  console.error('Unhandled server error:', err.message);
+  const statusCode = err.statusCode || err.status || 500;
+  return res.status(statusCode).json({
+    success: false,
+    message: err.expose ? err.message : 'An unexpected server error occurred'
+  });
+});
+
 // Start server after connecting to MongoDB
 async function startServer() {
   try {

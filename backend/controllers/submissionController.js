@@ -1,4 +1,4 @@
-javascript
+// javascript
 const mongoose = require("mongoose");
 const Submission = require("../models/Submission");
 const Assignment = require("../models/Assignment");
@@ -43,7 +43,8 @@ const createSubmission = async (req, res) => {
 
     // Enforce the configured minimum word count.
     const settings = await Settings.findOne({ key: "global" }).lean();
-    const minimumWords = settings?.minimumWords ?? 20;
+    const globalMinWords = settings?.minimumWords ?? 20;
+    const minimumWords = assignmentExists.minWords ?? globalMinWords;
 
     if (wordCount < minimumWords) {
       return res.status(400).json({
@@ -139,15 +140,18 @@ const getMySubmissions = async (req, res) => {
 // Return submissions and pairwise similarity comparisons.
 const getSubmissionReports = async (req, res) => {
   try {
+    const myAssignments = await Assignment.find({ createdBy: req.user.id }).select("_id").lean();
+    const assignmentIds = myAssignments.map(a => a._id);
+
     const [submissions, comparisons] = await Promise.all([
-      Submission.find()
+      Submission.find({ assignment: { $in: assignmentIds } })
         .select("-text")
         .populate("student", "name email")
         .populate("assignment", "title course maxMarks")
         .sort({ createdAt: -1 })
         .lean(),
 
-      getPairwiseComparisons()
+      getPairwiseComparisons(assignmentIds)
     ]);
 
     return res.status(200).json({
@@ -189,22 +193,22 @@ const updateSubmission = async (req, res) => {
       });
     }
 
-    // Students can update only their own submissions.
+    // Only the student who submitted this work can update it
     if (
-      req.user.role === "student" &&
+      req.user.role !== "student" ||
       String(submission.student) !== String(req.user.id)
     ) {
       return res.status(403).json({
         success: false,
-        message: "You can only update your own submission"
+        message: "Only the student who submitted this work can update it"
       });
     }
 
-    // Only students and instructors may use this endpoint.
-    if (!["student", "instructor"].includes(req.user.role)) {
-      return res.status(403).json({
+    // Submissions that have already been graded cannot be modified
+    if (submission.marks !== null && submission.marks !== undefined) {
+      return res.status(400).json({
         success: false,
-        message: "You are not allowed to update submissions"
+        message: "Cannot update a submission that has already been graded"
       });
     }
 
@@ -229,10 +233,23 @@ const updateSubmission = async (req, res) => {
         });
       }
 
-      submission.text = body.text.trim();
-      submission.wordCount = submission.text
-        .split(/\s+/)
-        .filter(Boolean).length;
+      const cleanText = body.text.trim();
+      const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
+
+      const assignmentExists = await Assignment.findById(submission.assignment);
+      const settings = await Settings.findOne({ key: "global" }).lean();
+      const globalMinWords = settings?.minimumWords ?? 20;
+      const minimumWords = assignmentExists?.minWords ?? globalMinWords;
+
+      if (wordCount < minimumWords) {
+        return res.status(400).json({
+          success: false,
+          message: `Your submission has ${wordCount} words. Minimum required words: ${minimumWords}.`
+        });
+      }
+
+      submission.text = cleanText;
+      submission.wordCount = wordCount;
     }
 
     if (hasFilename) {

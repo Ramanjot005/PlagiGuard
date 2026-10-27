@@ -1,401 +1,222 @@
 # PlagiGuard
 
-## Free Plagiarism & Similarity Checker for Students and Researchers
+## Plagiarism & Similarity Detection Platform for Academic Integrity
 
-PlagiGuard is a browser-based academic assignment management and similarity detection platform built using **HTML5, CSS3, and Vanilla JavaScript**.
+PlagiGuard is a full-stack academic assignment management and similarity detection platform built with a **Node.js/Express backend, MongoDB database, and a responsive HTML5, CSS3, and Vanilla JavaScript frontend**.
 
-It provides separate **Student** and **Instructor** environments. Students can view assignments, submit work, check similarity results, and view marks and feedback. Instructors can create assignments, review submissions, compare student work, calculate similarity, and provide marks and feedback.
+It provides separate **Student** and **Instructor** workspaces:
+* **Students** can register, log in, view coursework, submit assignments (typed or text file upload), review similarity scores and flagged statuses, and view instructor marks and feedback.
+* **Instructors** can create, edit, and delete coursework, view submission reports, inspect pairwise similarity matrices/heatmaps, review side-by-side matching passages, configure similarity analysis thresholds, and record marks and feedback.
 
-The project uses **tokenization, N-gram generation, and Jaccard similarity** and does not require an external API or backend server.
-
----
-
-## 1. Project Objectives
-
-The main objectives of PlagiGuard are to:
-
-* Develop a modern academic assignment platform.
-* Provide separate Student and Instructor dashboards.
-* Allow instructors to create and manage assignments.
-* Allow students to submit assignments and track results.
-* Validate minimum word requirements.
-* Implement tokenization and N-gram generation.
-* Calculate Jaccard similarity between submissions.
-* Perform pairwise comparison.
-* Identify potentially similar submissions.
-* Provide detailed similarity reports.
-* Highlight matching passages.
-* Allow instructors to mark work and provide feedback.
-* Provide analytics, notifications, deadlines, and profile management.
+Similarity detection uses **text normalization, tokenization, N-gram generation, and Jaccard similarity calculation**, with automatic background re-analysis and cross-submission comparison.
 
 ---
 
-## 2. Scope
+## 1. System Architecture
 
-### Student Features
-
-Students can:
-
-* Register and log in.
-* View assignments and instructions.
-* Submit assignment content.
-* Check word count.
-* View similarity scores.
-* See Flagged / Not Flagged status.
-* View marks and instructor feedback.
-* Track deadlines and notifications.
-* Edit profiles and upload profile pictures.
-* View analytics and submission history.
-
-### Instructor Features
-
-Instructors can:
-
-* Register and log in.
-* Create, edit, and delete assignments.
-* Set word limits, marks, and deadlines.
-* View student submissions.
-* Search and filter submissions.
-* Run similarity analysis.
-* View similarity heatmaps.
-* View side-by-side highlighted matches.
-* Mark submissions and provide feedback.
-* Configure N-gram and similarity settings.
-* View instructor analytics.
+```text
+┌────────────────────────────────────────────────────────┐
+│                   Frontend Client                      │
+│     (HTML5, CSS3, Vanilla JS, API Client, Fetch)       │
+│                  Dev Server: Port 8080                 │
+└───────────────────────────┬────────────────────────────┘
+                            │ HTTP / JSON REST APIs
+                            │ Authorization: Bearer <JWT>
+┌───────────────────────────▼────────────────────────────┐
+│                    Express Backend                     │
+│               (Node.js REST API Server)                │
+│                      Port: 5000                        │
+├────────────────────────────────────────────────────────┤
+│ • Auth & Role Middleware (protect, authorizeRoles)     │
+│ • Assignment Controller (CRUD, ownership validation)   │
+│ • Submission Controller (Upload, Reports, Grading)     │
+│ • Similarity Engine (Tokenize, N-Grams, Jaccard)       │
+│ • Settings & Profile Controllers                       │
+└───────────────────────────┬────────────────────────────┘
+                            │ Mongoose ODM
+┌───────────────────────────▼────────────────────────────┐
+│                    MongoDB Database                    │
+│             (MongoDB Atlas or Local MongoDB)           │
+│   Collections: users, assignments, submissions,        │
+│                settings                                │
+└────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 3. Technologies Used
+## 2. Technologies Used
+
+### Backend
+* **Node.js** (v18+) — runtime environment
+* **Express.js** (v5) — RESTful API framework
+* **MongoDB & Mongoose** (v9) — document database and object data modeling
+* **jsonwebtoken (JWT)** — stateless authentication and role-based session management
+* **bcryptjs** — secure 12-round salted password hashing
+* **cors** & **dotenv** — cross-origin resource sharing and environment configuration
 
 ### Frontend
-
-* **HTML5** — page structure and forms
-* **CSS3** — responsive layouts, dashboards, glassmorphism, themes, and animations
-* **Vanilla JavaScript** — application logic, DOM manipulation, validation, similarity detection, dashboards, analytics, and interactions
-
-### Browser Storage
-
-* `localStorage`
-* `sessionStorage`
-
-No external API or backend is required in the current version.
+* **HTML5** — semantic page structure and accessible forms
+* **CSS3** — responsive layout, custom dashboard grids, glassmorphism, themes (dark/light), animations
+* **Vanilla JavaScript (ES6+)** — API integration, DOM manipulation, real-time client-side word count, modal dialogs
 
 ---
 
-## 4. Similarity Detection
+## 3. Core API Endpoints
 
-PlagiGuard follows this workflow:
+### Authentication (`/api/auth`)
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Public | Register a new student account ($\ge 8$ char password required) |
+| `POST` | `/api/auth/login` | Public | Authenticate user, returns 1-day signed JWT |
+| `GET` | `/api/auth/profile` | Authenticated | Retrieve authenticated user profile |
+| `PATCH` | `/api/auth/profile` | Authenticated | Update user display name and profile image |
 
-```text
-Submission
-   ↓
-Tokenization
-   ↓
-N-Gram Generation
-   ↓
-Pairwise Comparison
-   ↓
-Jaccard Similarity
-   ↓
-Threshold Check
-   ↓
-Flagged / Not Flagged
-   ↓
-Similarity Report
-```
+### Coursework & Assignments (`/api/assignments`)
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/assignments` | Authenticated | List assignments (students see all; instructors see own) |
+| `POST` | `/api/assignments` | Instructor | Create new assignment (title, course, dueDate, maxMarks, minWords) |
+| `GET` | `/api/assignments/:id` | Authenticated | Fetch single assignment by MongoDB ID |
+| `PUT` | `/api/assignments/:id` | Instructor Owner | Update assignment details (only assignment creator) |
+| `DELETE` | `/api/assignments/:id`| Instructor Owner | Delete assignment (only creator, blocked if submissions exist) |
 
-### Tokenization
+### Submissions & Similarity (`/api/submissions`)
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/submissions` | Student | Submit assignment text; runs automatic similarity analysis |
+| `GET` | `/api/submissions/my` | Student | Retrieve student's own submission history |
+| `GET` | `/api/submissions/:id` | Owner / Instructor | Retrieve submission details (IDOR protected) |
+| `GET` | `/api/submissions/reports` | Instructor | Retrieve submissions and pairwise comparisons for instructor |
+| `GET` | `/api/submissions/reports/pairwise` | Instructor | Retrieve scoped pairwise comparisons |
+| `GET` | `/api/submissions/assignment/:id` | Instructor Owner | Retrieve submissions for a specific assignment |
+| `PATCH`| `/api/submissions/:id/grade` | Instructor Owner | Record marks, feedback, and grading status |
+| `PATCH`| `/api/submissions/:id` | Student Owner | Update submission text before grading (re-analyzes similarity) |
 
-Text is normalized and divided into tokens.
-
-Example:
-
-```text
-"JavaScript Variables are useful!"
-```
-
-becomes:
-
-```text
-["javascript", "variables", "are", "useful"]
-```
-
-### N-Grams
-
-For `N = 3`:
-
-```text
-javascript variables are
-variables are useful
-```
-
-### Jaccard Similarity
-
-The project uses:
-
-```text
-J(A,B) = |A ∩ B| / |A ∪ B|
-```
-
-The result is shown as a percentage.
+### Analysis Settings (`/api/settings`)
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/settings` | Authenticated | Get global analysis settings (N-gram size, threshold, minWords) |
+| `PUT` | `/api/settings` | Instructor | Update similarity engine configuration |
 
 ---
 
-## 5. Similarity Reports
-
-The report provides:
-
-* Similarity percentage
-* Flagged / Not Flagged status
-* Highest matching submission
-* Matching N-grams
-* Similarity threshold
-* Word count
-* Marks and feedback
-* Similarity heatmap
-* Side-by-side submission comparison
-* Highlighted matching text
-* Print/PDF-friendly report
-
-A flagged result indicates that the similarity has reached the configured threshold and requires instructor review. It does **not** automatically prove plagiarism.
-
----
-
-## 6. Assignment Workflow
+## 4. Similarity Detection Algorithm
 
 ```text
-Instructor Creates Assignment
+Student Submission Text
           ↓
-Assignment Published
+     Tokenization
+(lowercase, strip non-alphanumeric, split whitespace)
           ↓
-Student Views Assignment
+   N-Gram Generation
+(sliding window of N words, default N = 3)
           ↓
-Student Submits
+  Pairwise Comparison
+(compare against existing student submissions)
           ↓
-Similarity Analysis
+   Jaccard Similarity
+J(A, B) = |A ∩ B| / |A ∪ B| × 100%
           ↓
-Instructor Reviews
+    Threshold Check
+(score ≥ threshold AND shared n-grams ≥ minimum matching)
           ↓
-Marks + Feedback
-          ↓
-Student Views Result
-```
-
-Assignments can contain:
-
-* Title
-* Instructions
-* Minimum word count
-* Maximum marks
-* Due date
-* Publication status
-
----
-
-## 7. Notifications and Deadlines
-
-The system provides browser-based notifications for:
-
-* New assignments
-* Upcoming deadlines
-* New submissions
-* Similarity results
-* Marking updates
-
-Assignments can display:
-
-```text
-7 days left
-2 days left
-Due tomorrow
-Due today
-Overdue
-Submitted
+Flagged / Clear Status + Bidirectional Update
 ```
 
 ---
 
-## 8. Analytics
+## 5. Prerequisites & Environment Setup
 
-### Student Analytics
+### Prerequisites
+* **Node.js** (v18.0.0 or higher)
+* **npm** (v9.0.0 or higher)
+* **MongoDB** (Local instance or MongoDB Atlas connection URI)
 
-Students can view:
-
-* Assignment completion
-* Average marks
-* Similarity trends
-* Flagged submissions
-* Recent activity
-
-### Instructor Analytics
-
-Instructors can view:
-
-* Total students
-* Total assignments
-* Total submissions
-* Flagged submissions
-* Average marks
-* Average similarity
-* Submission trends
-* Assignment performance
+### Configuration
+1. Navigate to the `backend/` directory.
+2. Ensure `.env` exists by copying `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+3. Update `.env` with your configuration:
+   ```env
+   PORT=5000
+   MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/plagiguard?retryWrites=true&w=majority
+   JWT_SECRET=your_secure_development_jwt_secret_key_minimum_32_chars
+   ```
+   *(Never commit `.env` containing production credentials to source control).*
 
 ---
 
-## 9. User Profiles
+## 6. How to Run
 
-Users can:
-
-* Edit profile information
-* Upload a profile picture
-* View role information
-* View account statistics
-
-The profile system works with browser storage.
-
----
-
-## 10. Theme and Responsive Design
-
-PlagiGuard supports:
-
-* Light mode
-* Dark mode
-* Responsive navigation
-* Responsive dashboards
-* Mobile-friendly forms and reports
-
-The interface uses a modern academic SaaS-style design with cards, gradients, glassmorphism, visual status indicators, and responsive layouts.
-
----
-
-## 11. Project Structure
-
-```text
-PlagiGuard/
-│
-├── assets/
-│   ├── images/
-│   ├── icons/
-│   └── banners/
-│
-├── css/
-├── js/
-│   └── pages/
-│
-├── student/
-├── instructor/
-│
-├── index.html
-├── about.html
-├── how-it-works.html
-├── login.html
-├── signup.html
-├── profile.html
-├── setting.html
-└── README.md
-```
-
----
-
-## 12. How to Run
-
-1. Clone or download the repository.
-2. Open the project in VS Code.
-3. Install the **Live Server** extension.
-4. Open `index.html`.
-5. Select **Open with Live Server**.
-
-Example:
-
+### Step 1: Install Backend Dependencies
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+cd backend
+npm install
 ```
 
----
+### Step 2: Seed an Instructor Account
+Public registration creates student accounts for academic integrity. To provision an authorized instructor account:
+```bash
+cd backend
+node createInstructor.js
+```
+*(You can customize the email and password within your local setup as needed).*
 
-## 13. JavaScript Concepts Demonstrated
+### Step 3: Start the Backend Server
+```bash
+cd backend
+npm run dev
+```
+The backend server runs at `http://localhost:5000`. You can verify health via `http://localhost:5000/api/health`.
 
-The project demonstrates:
+### Step 4: Start the Frontend
+From the project root:
+```bash
+# Using Python
+python -m http.server 8080
 
-* Variables and data types
-* Operators
-* Conditional statements
-* Loops
-* Functions
-* Arrow functions
-* Arrays and array methods
-* Higher-order functions
-* Objects and JSON
-* DOM manipulation
-* Events
-* Form validation
-* LocalStorage
-* SessionStorage
-* ES6 features
-
-These concepts are applied to a practical academic web application.
-
----
-
-## 14. Limitations
-
-The current version is frontend-only, so:
-
-* Data is stored in the browser.
-* There is no centralized database.
-* Authentication is intended for demonstration.
-* The system does not search the entire internet.
-* Similarity is calculated from submissions available in the application.
-* Clearing browser storage may remove local data.
+# Or using npx serve / http-server
+npx serve -l 8080 .
+```
+Access the application at `http://localhost:8080/frontend/html/index.html` or `http://localhost:8080/frontend/html/login.html`.
 
 ---
 
-## 15. Future Scope
+## 7. Running Automated Tests
 
-Future versions could include:
+PlagiGuard includes a comprehensive test suite testing unit algorithms, authentication, role barriers, ownership scoping, assignment CRUD, submissions, similarity detection, grading, settings, and error handling.
 
-* Backend authentication
-* Database integration
-* Secure user accounts
-* Cloud storage
-* PDF/DOCX processing
-* Large-scale similarity indexing
-* External academic source checking
-* Email notifications
-* Advanced document analysis
+To run the automated test suite:
+```bash
+cd backend
+npm test
+```
+
+The test runner:
+1. Connects to MongoDB safely.
+2. Runs unit and endpoint integration checks.
+3. Automatically deletes only its own temporary test records on completion.
+4. Leaves existing student, instructor, assignment, and grade records intact.
 
 ---
 
-## 16. Conclusion
+## 8. Security & Data Protection Features
 
-PlagiGuard is an educational academic similarity and assignment-management platform that combines modern web development with text-similarity techniques.
-
-It demonstrates:
-
-* Assignment management
-* Student submissions
-* Similarity detection
-* Tokenization
-* N-Grams
-* Jaccard similarity
-* Pairwise comparison
-* Similarity reports
-* Highlighted matching evidence
-* Instructor marking
-* Analytics
-* Notifications
-* Responsive UI
-
-The project is designed as an academic demonstration and provides a foundation for future development into a full-stack institutional system.
+* **JWT Verification:** All protected routes require a signed `Bearer` token with user existence checks in MongoDB.
+* **Role-Based Authorization:** Strict middleware guards separate Student routes from Instructor administrative tools.
+* **IDOR Protection:** Students can only view their own submissions; cross-student access attempts return HTTP 403.
+* **Instructor Ownership Scoping:** Instructors can only update, delete, or grade submissions for assignments they personally created.
+* **Tamper Prevention:** Submission text cannot be edited by instructors, and students cannot mutate submissions that have already been graded.
+* **Input Validation & Sanitization:** Strict bounds checking on marks, word count, email syntax, password length, and MongoDB ObjectIds.
+* **Information Leak Prevention:** Passwords use salted hashes (`select: false`); malformed requests and unhandled errors return clean JSON without exposing stack traces or environment variables.
 
 ---
 
 ## Project Information
 
 **Project:** PlagiGuard
-**Domain:** Web Development / Academic Similarity Detection
-**Technology:** HTML5, CSS3, Vanilla JavaScript
-**Storage:** LocalStorage / SessionStorage
-**Architecture:** Frontend-Only
-**Purpose:** Academic Project / Educational Demonstration
+**Domain:** Academic Integrity & Assignment Similarity Detection
+**Architecture:** Full-Stack (Node.js/Express REST API + MongoDB + Vanilla JS Client)
+**Port Configuration:** Backend `5000`, Frontend `8080`

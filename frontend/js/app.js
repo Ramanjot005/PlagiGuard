@@ -380,10 +380,11 @@ const PG = (() => {
             dueDate: assignment.dueDate
                 ? String(assignment.dueDate).slice(0, 10)
                 : "",
-            maxMarks: assignment.maxMarks ?? 100
+            maxMarks: assignment.maxMarks ?? 100,
+            minWords: assignment.minWords ?? null
         }));
     }
-    
+
     // ==================== BACKEND DATA API ====================
 
     async function fetchAssignments() {
@@ -391,7 +392,16 @@ const PG = (() => {
             method: 'GET'
         });
 
-        return Array.isArray(result) ? result : (result.data || result.assignments || []);
+        const list = Array.isArray(result) ? result : (result.data || result.assignments || []);
+        return list.map(a => ({
+            ...a,
+            id: String(a._id || a.id || ''),
+            _id: String(a._id || a.id || ''),
+            course: a.course || '',
+            dueDate: a.dueDate ? String(a.dueDate).slice(0, 10) : '',
+            maxMarks: a.maxMarks ?? 100,
+            minWords: a.minWords ?? null
+        }));
     }
 
     async function createAssignmentAPI(assignment) {
@@ -412,11 +422,36 @@ const PG = (() => {
             method: 'GET'
         });
 
-        return result.submissions || result.data || [];
+        const list = Array.isArray(result) ? result : (result.submissions || result.data || []);
+        return list.map(s => ({
+            ...s,
+            id: String(s._id || s.id || ''),
+            _id: String(s._id || s.id || ''),
+            assignmentId: String(s.assignment?._id || s.assignment?.id || s.assignment || s.assignmentId || ''),
+            studentId: String(s.student?._id || s.student?.id || s.student || s.studentId || ''),
+            studentName: s.student?.name || s.studentName || 'Student',
+            assignmentTitle: s.assignment?.title || s.assignmentTitle || 'Assignment',
+            maxMarks: s.assignment?.maxMarks ?? 100,
+            submittedAt: s.createdAt || s.submittedAt || new Date().toISOString(),
+            maxSimilarity: Number(s.maxSimilarity ?? s.analysis?.maxSimilarity ?? 0),
+            flagged: Boolean(s.status === 'flagged' || s.flagged),
+            topMatchStudent: s.topMatch?.student?.name || s.topMatchStudent || '',
+            topMatchSubmissionId: s.topMatch?.submission ? String(s.topMatch.submission._id || s.topMatch.submission) : String(s.topMatchSubmissionId || ''),
+            matchingNgrams: s.matchingNGrams || s.matchingNgrams || [],
+            marks: s.marks ?? null,
+            feedback: s.feedback || ''
+        }));
     }
     async function createSubmissionAPI(submission) {
         return await apiRequest('/submissions', {
             method: 'POST',
+            body: JSON.stringify(submission)
+        });
+    }
+
+    async function updateSubmissionAPI(id, submission) {
+        return await apiRequest(`/submissions/${encodeURIComponent(id)}`, {
+            method: 'PATCH',
             body: JSON.stringify(submission)
         });
     }
@@ -433,7 +468,25 @@ const PG = (() => {
             method: 'GET'
         });
 
-        return Array.isArray(result) ? result : (result.submissions || result.data || []);
+        const list = Array.isArray(result) ? result : (result.submissions || result.data || []);
+        return list.map(s => ({
+            ...s,
+            id: String(s._id || s.id || ''),
+            _id: String(s._id || s.id || ''),
+            assignmentId: String(s.assignment?._id || s.assignment?.id || s.assignment || s.assignmentId || ''),
+            studentId: String(s.student?._id || s.student?.id || s.student || s.studentId || ''),
+            studentName: s.student?.name || s.studentName || 'Student',
+            assignmentTitle: s.assignment?.title || s.assignmentTitle || 'Assignment',
+            maxMarks: s.assignment?.maxMarks ?? 100,
+            submittedAt: s.createdAt || s.submittedAt || new Date().toISOString(),
+            maxSimilarity: Number(s.maxSimilarity ?? s.analysis?.maxSimilarity ?? 0),
+            flagged: Boolean(s.status === 'flagged' || s.flagged),
+            topMatchStudent: s.topMatch?.student?.name || s.topMatchStudent || '',
+            topMatchSubmissionId: s.topMatch?.submission ? String(s.topMatch.submission._id || s.topMatch.submission) : String(s.topMatchSubmissionId || ''),
+            matchingNgrams: s.matchingNGrams || s.matchingNgrams || [],
+            marks: s.marks ?? null,
+            feedback: s.feedback || ''
+        }));
     }
 
 
@@ -576,9 +629,10 @@ const PG = (() => {
 
     async function deleteAssignment(id) {
         if (getAuthToken()) {
-            throw new Error(
-                "Assignment deletion is not available because the backend has no DELETE route yet."
-            );
+            const result = await apiRequest(`/assignments/${encodeURIComponent(id)}`, {
+                method: "DELETE"
+            });
+            return result;
         }
 
         const user = getCurrentUser();
@@ -590,6 +644,25 @@ const PG = (() => {
         saveAssignments(getAssignments().filter(a => a.id !== id));
 
         return true;
+    }
+
+    async function deleteAssignmentAPI(id) {
+        return await apiRequest(`/assignments/${encodeURIComponent(id)}`, {
+            method: 'DELETE'
+        });
+    }
+
+    async function fetchSettingsAPI() {
+        const result = await apiRequest('/settings', { method: 'GET' });
+        return result.settings || result.data || DEFAULT_SETTINGS;
+    }
+
+    async function updateSettingsAPI(settings) {
+        const result = await apiRequest('/settings', {
+            method: 'PUT',
+            body: JSON.stringify(settings)
+        });
+        return result.settings || result.data;
     }
 
     // ---------------- REGISTRATION ----------------
@@ -654,7 +727,7 @@ const PG = (() => {
 
     // ---------------- USER PROFILE ----------------
 
-    function updateCurrentUser(changes) {
+    async function updateCurrentUser(changes) {
         const current = getCurrentUser();
 
         if (!current) {
@@ -662,9 +735,21 @@ const PG = (() => {
         }
 
         if (getAuthToken()) {
-            throw new Error(
-                "Profile updates for backend accounts must be saved through the backend API."
-            );
+            const result = await apiRequest('/auth/profile', {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    name: changes.name,
+                    profileImageUrl: changes.avatar || changes.profileImageUrl
+                })
+            });
+
+            const updatedUser = {
+                ...current,
+                ...result.data,
+                avatar: result.data?.profileImageUrl || current.avatar
+            };
+            sessionStorage.setItem(KEYS.authUser, JSON.stringify(updatedUser));
+            return updatedUser;
         }
 
         const users = getUsers().map(user =>
@@ -682,9 +767,7 @@ const PG = (() => {
         const user = getCurrentUser();
 
         if (!user) {
-            const loginPath = typeof pgPublicHref === 'function' ? pgPublicHref('login.html') : '../html/login.html';
-            window.location.href =
-const loginPath =
+            const loginPath =
     typeof pgPublicHref === "function"
         ? pgPublicHref("login.html")
         : "../html/login.html";
@@ -732,6 +815,21 @@ window.location.href =
         }
 
         if (getAuthToken()) {
+            if (submissionId) {
+                const result = await apiRequest(
+                    `/submissions/${encodeURIComponent(submissionId)}`,
+                    {
+                        method: "PATCH",
+                        body: JSON.stringify({
+                            filename: filename || "typed-submission.txt",
+                            text: cleanText
+                        })
+                    }
+                );
+
+                return result.submission || result.data;
+            }
+
             if (!/^[a-f\d]{24}$/i.test(String(assignmentId || ""))) {
                 throw new Error(
                     "This assignment has no valid MongoDB ID. Load assignments from the backend and select one before submitting."
@@ -891,8 +989,12 @@ window.location.href =
         fetchAssignments,
         createAssignmentAPI,
         updateAssignmentAPI,
+        deleteAssignmentAPI,
+        fetchSettingsAPI,
+        updateSettingsAPI,
         fetchMySubmissions,
         createSubmissionAPI,
+        updateSubmissionAPI,
         fetchInstructorReports,
         gradeSubmissionAPI,
         getSettings,
@@ -927,6 +1029,6 @@ window.location.href =
         daysUntil,
         deadlineState,
         getInitialPage
-        
+
     };
 })();

@@ -199,4 +199,116 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+
+// ==================== GET PROFILE ====================
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImageUrl: user.profileImageUrl || "",
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    console.error("Get profile error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to retrieve profile"
+    });
+  }
+};
+
+// ==================== UPDATE PROFILE ====================
+const updateProfile = async (req, res) => {
+  try {
+    const { name, profileImageUrl } = req.body;
+
+    if (
+      req.body.role !== undefined ||
+      req.body.email !== undefined ||
+      req.body.password !== undefined ||
+      req.body.passwordHash !== undefined
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Email, password, and role cannot be changed via profile update"
+      });
+    }
+
+    const updates = {};
+
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Name must be a non-empty string"
+        });
+      }
+      updates.name = name.trim();
+    }
+
+    if (profileImageUrl !== undefined) {
+      if (typeof profileImageUrl !== "string") {
+        return res.status(400).json({
+          success: false,
+          message: "Profile image URL must be text"
+        });
+      }
+      updates.profileImageUrl = profileImageUrl.trim();
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Provide at least one allowed field to update"
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updates },
+      { returnDocument: "after", runValidators: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImageUrl: user.profileImageUrl || "",
+        updatedAt: user.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error("Update profile error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to update profile"
+    });
+  }
+};
+
+module.exports = { register, login, getProfile, updateProfile };

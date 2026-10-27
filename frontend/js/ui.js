@@ -72,22 +72,35 @@ function pgGetNotifications() {
 
     const now = Date.now();
     const items = [];
-    const assignments = PG.getAssignments();
-    const submissions = PG.getSubmissions();
+    let assignments = PG.getAssignments();
+    let submissions = PG.getSubmissions();
+
+    if (PG.getAuthToken()) {
+        try {
+            const cachedA = sessionStorage.getItem('pg_backend_assignments');
+            const cachedS = sessionStorage.getItem('pg_backend_submissions');
+            if (cachedA) assignments = JSON.parse(cachedA);
+            if (cachedS) submissions = JSON.parse(cachedS);
+        } catch (e) {}
+    }
+
+    const currentUserId = String(user.id || user._id || '');
 
     if (user.role === 'student') {
         assignments.forEach(a => {
+            const aid = String(a.id || a._id || '');
             const sub = submissions.find(
-                s => s.assignmentId === a.id && s.studentId === user.id
+                s => String(s.assignmentId || s.assignment?._id || s.assignment || '') === aid &&
+                     (!s.studentId || String(s.studentId || s.student?._id || s.student || '') === currentUserId)
             );
 
             if (sub && sub.marks !== null && sub.marks !== undefined) {
                 items.push({
-                    id: `marked-${sub.id}-${sub.markedAt || ''}`,
+                    id: `marked-${sub.id || sub._id}-${sub.markedAt || ''}`,
                     type: 'success',
                     icon: '✓',
                     title: 'Submission marked',
-                    text: `${a.title} received ${sub.marks}/${a.maxMarks}.`,
+                    text: `${a.title} received ${sub.marks}/${a.maxMarks || 100}.`,
                     date: sub.markedAt || sub.submittedAt,
                     href: pgStudentHref('results.html')
                 });
@@ -99,7 +112,7 @@ function pgGetNotifications() {
                 ['urgent', 'soon'].includes(PG.deadlineState(a.dueDate))
             ) {
                 items.push({
-                    id: `due-${a.id}-${a.dueDate}`,
+                    id: `due-${aid}-${a.dueDate}`,
                     type: 'warning',
                     icon: '!',
                     title: 'Deadline approaching',
@@ -115,7 +128,7 @@ function pgGetNotifications() {
                 !sub
             ) {
                 items.push({
-                    id: `new-${a.id}`,
+                    id: `new-${aid}`,
                     type: 'info',
                     icon: '＋',
                     title: 'New assignment posted',
@@ -127,7 +140,7 @@ function pgGetNotifications() {
 
             if (sub?.flagged) {
                 items.push({
-                    id: `flag-${sub.id}-${sub.maxSimilarity}`,
+                    id: `flag-${sub.id || sub._id}-${sub.maxSimilarity}`,
                     type: 'danger',
                     icon: '⚠',
                     title: 'Similarity review',
@@ -139,18 +152,22 @@ function pgGetNotifications() {
         });
     } else {
         submissions.forEach(s => {
+            const sid = String(s.id || s._id || '');
+            const aid = String(s.assignmentId || s.assignment?._id || s.assignment || '');
+            const studentName = s.studentName || s.student?.name || 'Student';
+
             if (
                 s.submittedAt &&
                 (now - new Date(s.submittedAt).getTime()) < 7 * 86400000
             ) {
-                const a = assignments.find(a => a.id === s.assignmentId);
+                const a = assignments.find(x => String(x.id || x._id || '') === aid);
 
                 items.push({
-                    id: `submission-${s.id}`,
+                    id: `submission-${sid}`,
                     type: 'info',
                     icon: '↑',
                     title: 'New submission',
-                    text: `${s.studentName} submitted ${a?.title || 'an assignment'}.`,
+                    text: `${studentName} submitted ${a?.title || 'an assignment'}.`,
                     date: s.submittedAt,
                     href: pgInstructorHref('assignments.html')
                 });
@@ -158,11 +175,11 @@ function pgGetNotifications() {
 
             if (s.flagged) {
                 items.push({
-                    id: `flagged-${s.id}-${s.maxSimilarity}`,
+                    id: `flagged-${sid}-${s.maxSimilarity}`,
                     type: 'danger',
                     icon: '⚠',
                     title: 'Similarity flagged',
-                    text: `${s.studentName} has a ${Number(s.maxSimilarity || 0).toFixed(1)}% similarity match.`,
+                    text: `${studentName} has a ${Number(s.maxSimilarity || 0).toFixed(1)}% similarity match.`,
                     date: s.submittedAt,
                     href: pgInstructorHref('reports.html')
                 });
@@ -170,9 +187,10 @@ function pgGetNotifications() {
         });
 
         assignments.forEach(a => {
+            const aid = String(a.id || a._id || '');
             if (['urgent', 'soon'].includes(PG.deadlineState(a.dueDate))) {
                 items.push({
-                    id: `inst-due-${a.id}-${a.dueDate}`,
+                    id: `inst-due-${aid}-${a.dueDate}`,
                     type: 'warning',
                     icon: '◷',
                     title: 'Assignment deadline',
@@ -289,40 +307,107 @@ function bindNotifications() {
         panel.classList.toggle('open');
     });
 
-    panel.querySelectorAll('.notification-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const user = PG.getCurrentUser();
-
-            if (!user) return;
-
-            const seen = JSON.parse(
-                localStorage.getItem(pgNotificationKey(user.id)) || '[]'
-            );
-
-            if (!seen.includes(item.dataset.noteId)) {
-                seen.push(item.dataset.noteId);
-
-                localStorage.setItem(
-                    pgNotificationKey(user.id),
-                    JSON.stringify(seen.slice(-80))
+    function bindItemClicks() {
+        panel.querySelectorAll('.notification-item').forEach(item => {
+            item.onclick = () => {
+                const user = PG.getCurrentUser();
+                if (!user) return;
+                const seen = JSON.parse(
+                    localStorage.getItem(pgNotificationKey(user.id || user._id)) || '[]'
                 );
-            }
+                if (!seen.includes(item.dataset.noteId)) {
+                    seen.push(item.dataset.noteId);
+                    localStorage.setItem(
+                        pgNotificationKey(user.id || user._id),
+                        JSON.stringify(seen.slice(-80))
+                    );
+                }
+            };
         });
-    });
+    }
+    bindItemClicks();
+
+    function refreshNotificationUI() {
+        const wrap = document.querySelector('.notification-wrap');
+        if (!wrap) return;
+        const items = pgGetNotifications();
+        const unread = pgUnreadCount(items);
+        const toggleBtn = document.getElementById('notification-toggle');
+        const listEl = wrap.querySelector('.notification-list');
+        const headCount = wrap.querySelector('.notification-head small');
+
+        if (toggleBtn) {
+            let dot = toggleBtn.querySelector('.notification-dot');
+            if (unread) {
+                if (!dot) {
+                    dot = document.createElement('b');
+                    dot.className = 'notification-dot';
+                    toggleBtn.appendChild(dot);
+                }
+                dot.textContent = Math.min(unread, 9);
+            } else if (dot) {
+                dot.remove();
+            }
+        }
+
+        if (headCount) {
+            headCount.textContent = unread ? `${unread} new` : 'All caught up';
+        }
+
+        if (listEl) {
+            listEl.innerHTML = items.length
+                ? items.map(item => `
+                    <a
+                        class="notification-item ${item.type}"
+                        href="${item.href}"
+                        data-note-id="${PG.escapeHtml(item.id)}"
+                    >
+                        <span class="notification-icon">${item.icon}</span>
+                        <span class="notification-copy">
+                            <strong>${PG.escapeHtml(item.title)}</strong>
+                            <small>${PG.escapeHtml(item.text)}</small>
+                            <em>${timeAgo(item.date)}</em>
+                        </span>
+                    </a>
+                `).join('')
+                : '<div class="notification-empty">No new activity yet.</div>';
+
+            bindItemClicks();
+        }
+    }
+
+    if (PG.getAuthToken()) {
+        const user = PG.getCurrentUser();
+        if (user) {
+            Promise.all([
+                PG.fetchAssignments().catch(() => []),
+                user.role === 'instructor'
+                    ? PG.fetchInstructorReports().catch(() => [])
+                    : PG.fetchMySubmissions().catch(() => [])
+            ]).then(([backendAssignments, backendSubmissions]) => {
+                if (backendAssignments && backendAssignments.length) {
+                    sessionStorage.setItem('pg_backend_assignments', JSON.stringify(backendAssignments));
+                }
+                if (backendSubmissions) {
+                    sessionStorage.setItem('pg_backend_submissions', JSON.stringify(backendSubmissions));
+                }
+                refreshNotificationUI();
+            }).catch(err => {
+                console.error('Failed to update live notifications:', err);
+            });
+        }
+    }
 
     document.getElementById('notification-mark-all')
         ?.addEventListener('click', () => {
             const user = PG.getCurrentUser();
-
             if (!user) return;
-
             localStorage.setItem(
-                pgNotificationKey(user.id),
+                pgNotificationKey(user.id || user._id),
                 JSON.stringify(pgGetNotifications().map(x => x.id).slice(-80))
             );
-
             panel.classList.remove('open');
-            window.location.reload();
+            refreshNotificationUI();
         });
 
     document.addEventListener('click', event => {

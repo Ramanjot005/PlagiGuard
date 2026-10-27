@@ -176,11 +176,12 @@ async function analyzeSubmission(submissionId) {
     };
 }
 
-async function getPairwiseComparisons() {
+async function getPairwiseComparisons(assignmentIds = null) {
     const settings = await getAnalysisSettings();
     const n = settings.ngramSize;
 
-    const submissions = await Submission.find({})
+    const query = assignmentIds && assignmentIds.length ? { assignment: { $in: assignmentIds } } : {};
+    const submissions = await Submission.find(query)
         .select("_id student assignment text")
         .lean();
 

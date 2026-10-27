@@ -1,6 +1,7 @@
 // javascript
 const mongoose = require("mongoose");
 const Assignment = require("../models/Assignment");
+const Submission = require("../models/Submission");
 
 // List assignments.
 // Students can see all assignments.
@@ -34,7 +35,7 @@ const getAssignments = async (req, res) => {
 // Create an assignment.
 const createAssignment = async (req, res) => {
   try {
-    const { title, course, description, dueDate, maxMarks } = req.body;
+    const { title, course, description, dueDate, maxMarks, minWords } = req.body;
 
     if (
       typeof title !== "string" ||
@@ -90,6 +91,7 @@ const createAssignment = async (req, res) => {
         typeof description === "string" ? description.trim() : "",
       dueDate: dueDate || null,
       maxMarks: maxMarks ?? 100,
+      minWords: minWords && Number.isInteger(Number(minWords)) && Number(minWords) >= 5 ? Number(minWords) : null,
       createdBy: req.user.id
     });
 
@@ -253,8 +255,65 @@ const updateAssignment = async (req, res) => {
   }
 };
 
+
+// Delete an assignment only if the logged-in instructor owns it and it has no student submissions.
+const deleteAssignment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid assignment ID"
+      });
+    }
+
+    const assignment = await Assignment.findById(id);
+
+    if (!assignment) {
+      return res.status(404).json({
+        success: false,
+        message: "Assignment not found"
+      });
+    }
+
+    if (
+      !assignment.createdBy ||
+      assignment.createdBy.toString() !== req.user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only delete your own assignments"
+      });
+    }
+
+    const submissionCount = await Submission.countDocuments({ assignment: id });
+    if (submissionCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete assignment with ${submissionCount} existing student submission${submissionCount === 1 ? "" : "s"}`
+      });
+    }
+
+    await Assignment.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Assignment deleted successfully"
+    });
+  } catch (error) {
+    console.error("Delete assignment error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to delete assignment"
+    });
+  }
+};
+
 module.exports = {
   getAssignments,
   createAssignment,
-  updateAssignment
+  updateAssignment,
+  deleteAssignment
 };

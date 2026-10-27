@@ -30,9 +30,9 @@ pgLayout({
       </div>
     </div>
     <div class="profile-quick-stats">
-      <div><strong>${submittedCount}</strong><span>Submissions</span></div>
-      <div><strong>${submittedCount?avgSimilarity.toFixed(1)+'%':'—'}</strong><span>Avg. similarity</span></div>
-      <div><strong>${flaggedCount}</strong><span>Flagged</span></div>
+      <div><strong id="profile-stat-submissions">${submittedCount}</strong><span>Submissions</span></div>
+      <div><strong id="profile-stat-avg">${submittedCount?avgSimilarity.toFixed(1)+'%':'—'}</strong><span>Avg. similarity</span></div>
+      <div><strong id="profile-stat-flagged">${flaggedCount}</strong><span>Flagged</span></div>
     </div>
   </section>
 
@@ -114,8 +114,8 @@ document.getElementById('profile-form').addEventListener('submit', async e => {
     if (!name) throw new Error('Please enter your full name.');
     if (users.some(u=>u.id!==user.id && u.email.toLowerCase()===email)) throw new Error('That email is already used by another account.');
     const previewImage = document.querySelector('#profile-avatar-preview img')?.getAttribute('src') || user.avatar || '';
-    PG.updateCurrentUser({name,email,studentId:user.role==='student'?studentId:'',bio:bioValue,avatar:previewImage});
-    Object.assign(user,{name,email,studentId:user.role==='student'?studentId:'',bio:bioValue,avatar:previewImage});
+    const updatedUser = await PG.updateCurrentUser({name,email,studentId:user.role==='student'?studentId:'',bio:bioValue,avatar:previewImage});
+    Object.assign(user, updatedUser || {name,email,studentId:user.role==='student'?studentId:'',bio:bioValue,avatar:previewImage});
     document.getElementById('profile-display-name').textContent=user.name;
     document.getElementById('profile-display-email').textContent=user.email;
     renderAvatar(user.avatar);
@@ -126,3 +126,24 @@ document.getElementById('profile-form').addEventListener('submit', async e => {
 });
 
 document.getElementById('cancel-profile').addEventListener('click', () => { fillForm(); renderAvatar(user.avatar || ''); });
+
+async function loadLiveStats() {
+  if (!PG.getAuthToken()) return;
+  try {
+    const liveSubmissions = user.role === 'instructor'
+      ? await PG.fetchInstructorReports()
+      : await PG.fetchMySubmissions();
+    const count = (liveSubmissions || []).length;
+    const flagged = (liveSubmissions || []).filter(s => s.flagged).length;
+    const avg = count ? liveSubmissions.reduce((a, s) => a + (Number(s.maxSimilarity) || 0), 0) / count : 0;
+    const subEl = document.getElementById('profile-stat-submissions');
+    const avgEl = document.getElementById('profile-stat-avg');
+    const flagEl = document.getElementById('profile-stat-flagged');
+    if (subEl) subEl.textContent = String(count);
+    if (avgEl) avgEl.textContent = count ? avg.toFixed(1) + '%' : '—';
+    if (flagEl) flagEl.textContent = String(flagged);
+  } catch (e) {
+    console.error('Failed to load profile quick stats from backend:', e);
+  }
+}
+loadLiveStats();
