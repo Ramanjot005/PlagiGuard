@@ -8,7 +8,7 @@ const API = (() => {
     // Can be overridden at runtime via window.__API_BASE_URL__ or API.setBaseUrl()
     let baseUrl = (typeof window !== 'undefined' && window.__API_BASE_URL__)
         ? window.__API_BASE_URL__
-        : 'http://localhost:5000/api';
+        : 'https://plagiguard-backend-1.onrender.com/api';
 
     const AUTH_TOKEN_KEY = 'pg_auth_token';
 

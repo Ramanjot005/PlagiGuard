@@ -6,8 +6,7 @@
  */
 
 const PG = (() => {
-    const API_BASE_URL = "http://localhost:5000/api";
-
+     const API_BASE_URL = "https://plagiguard-backend-1.onrender.com/api";
     const KEYS = {
         users: "pg_users_v1",
         assignments: "pg_assignments_v1",
@@ -319,8 +318,8 @@ const PG = (() => {
             });
         } catch (error) {
             throw new Error(
-                "Cannot connect to the backend. Make sure the server is running on port 5000."
-            );
+    "Cannot connect to the deployed backend. Please check your internet connection or try again later."
+);
         }
 
         let result;
